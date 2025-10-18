@@ -1,0 +1,351 @@
+-- =================================================================
+-- SCRIPT TẠO DATABASE QUẢN LÝ KHÁCH SẠN
+-- Tác giả: Gemini AI (Dựa trên tài liệu đồ án)
+-- Database: PostgreSQL
+-- =================================================================
+
+-- Xóa các bảng nếu đã tồn tại để tránh lỗi khi chạy lại script
+-- Sử dụng CASCADE để xóa các ràng buộc phụ thuộc
+DROP TABLE IF EXISTS ct_dich_vu CASCADE;
+DROP TABLE IF EXISTS ct_phu_thu CASCADE;
+DROP TABLE IF EXISTS ct_phieu_thue CASCADE;
+DROP TABLE IF EXISTS ctphieudat CASCADE;
+DROP TABLE IF EXISTS cttiennghi CASCADE;
+DROP TABLE IF EXISTS ctkhuyenmai CASCADE;
+DROP TABLE IF EXISTS hoa_don CASCADE;
+DROP TABLE IF EXISTS phieuthu CASCADE;
+DROP TABLE IF EXISTS phieuthue CASCADE;
+DROP TABLE IF EXISTS phieudat CASCADE;
+DROP TABLE IF EXISTS doiphong CASCADE;
+DROP TABLE IF EXISTS ctkhacho CASCADE;
+DROP TABLE IF EXISTS gia_dich_vu CASCADE;
+DROP TABLE IF EXISTS giaphuthu CASCADE;
+DROP TABLE IF EXISTS gia_hang_phong CASCADE;
+DROP TABLE IF EXISTS anh_hang_phong CASCADE;
+DROP TABLE IF EXISTS phong CASCADE;
+DROP TABLE IF EXISTS dich_vu CASCADE;
+DROP TABLE IF EXISTS hang_phong CASCADE;
+DROP TABLE IF EXISTS kieu_phong CASCADE;
+DROP TABLE IF EXISTS loai_phong CASCADE;
+DROP TABLE IF EXISTS trang_thai CASCADE;
+DROP TABLE IF EXISTS tien_nghi CASCADE;
+DROP TABLE IF EXISTS khuyenmai CASCADE;
+DROP TABLE IF EXISTS quan_ly CASCADE;
+DROP TABLE IF EXISTS nhan_vien CASCADE;
+DROP TABLE IF EXISTS bo_phan CASCADE;
+DROP TABLE IF EXISTS nhom_quyen CASCADE;
+DROP TABLE IF EXISTS khach_hang CASCADE;
+DROP TABLE IF EXISTS phu_thu CASCADE;
+
+
+-- =================================================================
+-- TẠO BẢNG
+-- =================================================================
+
+-- Bảng quản lý thông tin khách hàng
+CREATE TABLE khach_hang (
+    CCCD VARCHAR(20) PRIMARY KEY,
+    HO VARCHAR(50) NOT NULL,
+    TEN VARCHAR(50) NOT NULL,
+    SDT VARCHAR(15),
+    EMAIL VARCHAR(50) UNIQUE,
+    DIA_CHI VARCHAR(100),
+    MA_SO_THUE VARCHAR(20),
+    MAT_KHAU VARCHAR(255)
+);
+
+-- Bảng quản lý bộ phận trong khách sạn
+CREATE TABLE bo_phan (
+    ID_BP VARCHAR(10) PRIMARY KEY,
+    TEN_BP VARCHAR(50) NOT NULL
+);
+
+-- Bảng quản lý nhóm quyền (ví dụ: admin, lễ tân, buồng phòng)
+CREATE TABLE nhom_quyen (
+    ID_NQ VARCHAR(10) PRIMARY KEY,
+    TEN_NC VARCHAR(50) NOT NULL
+);
+
+-- Bảng quản lý nhân viên
+CREATE TABLE nhan_vien (
+    ID_NV VARCHAR(10) PRIMARY KEY,
+    HO VARCHAR(50) NOT NULL,
+    TEN VARCHAR(10) NOT NULL,
+    PHAI VARCHAR(10),
+    NGAY_SINH DATE,
+    DIA_CHI VARCHAR(100),
+    SDT VARCHAR(15) NOT NULL,
+    EMAIL VARCHAR(50) UNIQUE NOT NULL,
+    HINH VARCHAR(100),
+    USERNAME VARCHAR(50) UNIQUE NOT NULL,
+    PASSWORD VARCHAR(255) NOT NULL,
+    ID_BP VARCHAR(10) NOT NULL,
+    ID_NQ VARCHAR(10) NOT NULL,
+    FOREIGN KEY (ID_BP) REFERENCES bo_phan(ID_BP),
+    FOREIGN KEY (ID_NQ) REFERENCES nhom_quyen(ID_NQ)
+);
+-- Bảng quản lý: ai quản lý bộ phận nào
+CREATE TABLE quan_ly (
+    ID_BP VARCHAR(10),
+    MANV VARCHAR(10),
+    NGAYBDQL DATE,
+    PRIMARY KEY (ID_BP, MANV),
+    FOREIGN KEY (ID_BP) REFERENCES bo_phan(ID_BP),
+    FOREIGN KEY (MANV) REFERENCES nhan_vien(ID_NV)
+);
+
+-- Bảng loại phòng (ví dụ: phòng đơn, phòng đôi)
+CREATE TABLE loai_phong (
+    ID_LP VARCHAR(10) PRIMARY KEY,
+    TEN_LP VARCHAR(50) NOT NULL,
+    MO_TA VARCHAR(100)
+);
+
+-- Bảng kiểu phòng (ví dụ: Standard, Superior, Deluxe, Suite)
+CREATE TABLE kieu_phong (
+    ID_KP VARCHAR(10) PRIMARY KEY,
+    TEN_KP VARCHAR(50) NOT NULL,
+    MO_TA VARCHAR(100),
+    SO_LUONG_KHACH INT
+);
+
+-- Bảng hạng phòng (là sự kết hợp của loại và kiểu phòng)
+CREATE TABLE hang_phong (
+    ID_HANG_PHONG VARCHAR(10) PRIMARY KEY,
+    ID_KP VARCHAR(10) NOT NULL,
+    ID_LP VARCHAR(10) NOT NULL,
+    FOREIGN KEY (ID_KP) REFERENCES kieu_phong(ID_KP),
+    FOREIGN KEY (ID_LP) REFERENCES loai_phong(ID_LP)
+);
+
+-- Bảng giá của hạng phòng theo ngày
+CREATE TABLE gia_hang_phong (
+    ID_HANG_PHONG VARCHAR(10),
+    NGAYAPDUNG DATE,
+    GIA DECIMAL(10, 2) NOT NULL,
+    NGAY_THIET_LAP DATE NOT NULL,
+    ID_NV VARCHAR(10) NOT NULL,
+    PRIMARY KEY (ID_HANG_PHONG, NGAYAPDUNG),
+    FOREIGN KEY (ID_HANG_PHONG) REFERENCES hang_phong(ID_HANG_PHONG),
+    FOREIGN KEY (ID_NV) REFERENCES nhan_vien(ID_NV)
+);
+
+-- Bảng lưu trữ ảnh của hạng phòng
+CREATE TABLE anh_hang_phong (
+    ID_ANH_HANG_PHONG VARCHAR(10) PRIMARY KEY,
+    URL_ANH VARCHAR(100) NOT NULL,
+    ID_HANG_PHONG VARCHAR(10) NOT NULL,
+    FOREIGN KEY (ID_HANG_PHONG) REFERENCES hang_phong(ID_HANG_PHONG)
+);
+
+-- Bảng trạng thái phòng (trống, đang dọn, đang sửa, đã đặt)
+CREATE TABLE trang_thai (
+    ID_TT VARCHAR(10) PRIMARY KEY,
+    TEN_TRANG_THAI VARCHAR(50) NOT NULL
+);
+
+-- Bảng quản lý phòng cụ thể
+CREATE TABLE phong (
+    SOPHONG VARCHAR(10) PRIMARY KEY,
+    TANG INT NOT NULL,
+    ID_HANG_PHONG VARCHAR(10) NOT NULL,
+    ID_TT VARCHAR(10) NOT NULL,
+    FOREIGN KEY (ID_HANG_PHONG) REFERENCES hang_phong(ID_HANG_PHONG),
+    FOREIGN KEY (ID_TT) REFERENCES trang_thai(ID_TT)
+);
+
+-- Bảng tiện nghi
+CREATE TABLE tien_nghi (
+    ID_TN VARCHAR(10) PRIMARY KEY,
+    TEN_TN VARCHAR(50) NOT NULL,
+    ICON VARCHAR(100),
+    MO_TA VARCHAR(100)
+);
+
+-- Bảng chi tiết tiện nghi cho mỗi hạng phòng
+CREATE TABLE cttiennghi (
+    ID_TN VARCHAR(10),
+    ID_HANG_PHONG VARCHAR(10),
+    SO_LUONG INT NOT NULL,
+    PRIMARY KEY (ID_TN, ID_HANG_PHONG),
+    FOREIGN KEY (ID_TN) REFERENCES tien_nghi(ID_TN),
+    FOREIGN KEY (ID_HANG_PHONG) REFERENCES hang_phong(ID_HANG_PHONG)
+);
+
+-- Bảng khuyến mãi
+CREATE TABLE khuyenmai (
+    ID_KM VARCHAR(10) PRIMARY KEY,
+    MO_TA_KM VARCHAR(100) NOT NULL,
+    NGAY_BAT_DAU DATE NOT NULL,
+    NGAY_KET_THUC DATE NOT NULL
+);
+
+-- Bảng chi tiết khuyến mãi cho hạng phòng
+CREATE TABLE ctkhuyenmai (
+    ID_KM VARCHAR(10),
+    ID_HANG_PHONG VARCHAR(10),
+PHAN_TRAM_GIAM DECIMAL(5, 2) NOT NULL,
+    PRIMARY KEY (ID_KM, ID_HANG_PHONG),
+    FOREIGN KEY (ID_KM) REFERENCES khuyenmai(ID_KM),
+    FOREIGN KEY (ID_HANG_PHONG) REFERENCES hang_phong(ID_HANG_PHONG)
+);
+
+-- Bảng phiếu đặt phòng
+CREATE TABLE phieudat (
+    ID_PD VARCHAR(10) PRIMARY KEY,
+    NGAY_DAT DATE NOT NULL,
+    NGAY_BD_THUE DATE NOT NULL,
+    NGAY_DI DATE NOT NULL,
+    TRANG_THAI VARCHAR(20) NOT NULL,
+    SO_TIEN_COC DECIMAL(10, 2) NOT NULL,
+    CCCD VARCHAR(20) NOT NULL,
+    ID_NV VARCHAR(10),
+    FOREIGN KEY (CCCD) REFERENCES khach_hang(CCCD),
+    FOREIGN KEY (ID_NV) REFERENCES nhan_vien(ID_NV)
+);
+
+-- Bảng chi tiết phiếu đặt phòng (đặt những hạng phòng nào)
+CREATE TABLE ctphieudat (
+    ID_PD VARCHAR(10),
+    ID_HANG_PHONG VARCHAR(10),
+    SO_LUONG_PHONG_O INT NOT NULL,
+    DON_GIA DECIMAL(10, 2) NOT NULL,
+    PRIMARY KEY (ID_PD, ID_HANG_PHONG),
+    FOREIGN KEY (ID_PD) REFERENCES phieudat(ID_PD),
+    FOREIGN KEY (ID_HANG_PHONG) REFERENCES hang_phong(ID_HANG_PHONG)
+);
+
+-- Bảng phiếu thuê (check-in)
+CREATE TABLE phieuthue (
+    ID_PT VARCHAR(10) PRIMARY KEY,
+    NGAY_LAP DATE NOT NULL,
+    ID_NV VARCHAR(10) NOT NULL,
+    CCCD VARCHAR(20) NOT NULL,
+    ID_PD VARCHAR(10),
+    FOREIGN KEY (ID_NV) REFERENCES nhan_vien(ID_NV),
+    FOREIGN KEY (CCCD) REFERENCES khach_hang(CCCD),
+    FOREIGN KEY (ID_PD) REFERENCES phieudat(ID_PD)
+);
+
+-- Bảng hóa đơn tổng
+CREATE TABLE hoa_don (
+    ID_HD VARCHAR(10) PRIMARY KEY,
+    NGAY_LAP DATE NOT NULL,
+    ID_NV VARCHAR(10) NOT NULL,
+    ID_PT VARCHAR(10) NOT NULL,
+    TONG_TIEN DECIMAL(10, 2) NOT NULL,
+    TRANG_THAI VARCHAR(20) NOT NULL,
+    SOTIENGIAM DECIMAL(10, 2),
+    FOREIGN KEY (ID_NV) REFERENCES nhan_vien(ID_NV),
+    FOREIGN KEY (ID_PT) REFERENCES phieuthue(ID_PT)
+);
+
+-- Bảng chi tiết phiếu thuê (phòng nào được thuê)
+CREATE TABLE ct_phieu_thue (
+    ID_CT_PT INT PRIMARY KEY,
+    NGAY_DEN DATE NOT NULL,
+    GIO_DEN TIME,
+    NGAY_DI DATE,
+    DON_GIA DECIMAL(10, 2) NOT NULL,
+    TT_THANH_TOAN VARCHAR(20) NOT NULL,
+    ID_PT VARCHAR(10) NOT NULL,
+    SO_PHONG VARCHAR(10) NOT NULL,
+    ID_HD VARCHAR(10),
+    FOREIGN KEY (ID_PT) REFERENCES phieuthue(ID_PT),
+    FOREIGN KEY (SO_PHONG) REFERENCES phong(SOPHONG),
+    FOREIGN KEY (ID_HD) REFERENCES hoa_don(ID_HD)
+);
+
+-- Bảng chi tiết khách ở (ai ở phòng nào)
+CREATE TABLE ctkhacho (
+    ID_CT_PT INT,
+    CMND VARCHAR(20),
+    PRIMARY KEY (ID_CT_PT, CMND),
+    FOREIGN KEY (ID_CT_PT) REFERENCES ct_phieu_thue(ID_CT_PT),
+    FOREIGN KEY (CMND) REFERENCES khach_hang(CCCD)
+);
+
+-- Bảng ghi nhận việc đổi phòng
+CREATE TABLE doiphong (
+    ID_CT_PT INT,
+    SOPHONGMOI VARCHAR(10),
+    NGAY_DEN DATE NOT NULL,
+    NGAY_DI DATE,
+    SOPHONGCU VARCHAR(10),
+    PRIMARY KEY (ID_CT_PT, SOPHONGMOI),
+    FOREIGN KEY (ID_CT_PT) REFERENCES ct_phieu_thue(ID_CT_PT),
+    FOREIGN KEY (SOPHONGMOI) REFERENCES phong(SOPHONG)
+);
+
+-- Bảng dịch vụ (giặt ủi, minibar,...)
+CREATE TABLE dich_vu (
+ID_DV VARCHAR(10) PRIMARY KEY,
+    TEN_DV VARCHAR(50) NOT NULL,
+    MO_TA VARCHAR(100),
+    DON_VI_TINH VARCHAR(20) NOT NULL
+);
+
+-- Bảng giá dịch vụ theo ngày
+CREATE TABLE gia_dich_vu (
+    ID_DV VARCHAR(10),
+    NGAY_AP_DUNG DATE,
+    GIA DECIMAL(10, 2) NOT NULL,
+    ID_NV VARCHAR(10) NOT NULL,
+    PRIMARY KEY (ID_DV, NGAY_AP_DUNG),
+    FOREIGN KEY (ID_DV) REFERENCES dich_vu(ID_DV),
+    FOREIGN KEY (ID_NV) REFERENCES nhan_vien(ID_NV)
+);
+
+-- Bảng chi tiết sử dụng dịch vụ
+CREATE TABLE ct_dich_vu (
+    ID_CT_PT INT,
+    ID_DV VARCHAR(10),
+    NGAY_SU_DUNG DATE,
+    DON_GIA DECIMAL(10, 2) NOT NULL,
+    SO_LUONG INT NOT NULL,
+    TT_THANH_TOAN VARCHAR(20) NOT NULL,
+    ID_HD VARCHAR(10),
+    PRIMARY KEY (ID_CT_PT, ID_DV, NGAY_SU_DUNG),
+    FOREIGN KEY (ID_CT_PT) REFERENCES ct_phieu_thue(ID_CT_PT),
+    FOREIGN KEY (ID_DV) REFERENCES dich_vu(ID_DV),
+    FOREIGN KEY (ID_HD) REFERENCES hoa_don(ID_HD)
+);
+
+-- Bảng phụ thu
+CREATE TABLE phu_thu (
+    ID_PHU_THU VARCHAR(10) PRIMARY KEY,
+    TEN_PHU_THU VARCHAR(50) NOT NULL,
+    LY_DO VARCHAR(100)
+);
+
+-- Bảng giá phụ thu
+CREATE TABLE giaphuthu (
+    ID_PHU_THU VARCHAR(10),
+    NGAY_AP_DUNG DATE,
+    GIA DECIMAL(10, 2) NOT NULL,
+    ID_NV VARCHAR(10) NOT NULL,
+    PRIMARY KEY (ID_PHU_THU, NGAY_AP_DUNG),
+    FOREIGN KEY (ID_PHU_THU) REFERENCES phu_thu(ID_PHU_THU),
+    FOREIGN KEY (ID_NV) REFERENCES nhan_vien(ID_NV)
+);
+
+-- Bảng chi tiết phụ thu cho một hóa đơn
+CREATE TABLE ct_phu_thu (
+    ID_PHU_THU VARCHAR(10),
+    ID_CT_PT VARCHAR(10),
+    TT_THANH_TOAN VARCHAR(20) NOT NULL,
+    DON_GIA DECIMAL(10, 2) NOT NULL,
+    SO_LUONG INT NOT NULL,
+    ID_HD VARCHAR(10),
+    PRIMARY KEY (ID_PHU_THU, ID_CT_PT),
+    -- Giả định ID_CT_PT là VARCHAR(10) để khớp với diagram, dù trong bảng gốc là INT. Cần xem xét lại.
+    -- FOREIGN KEY (ID_CT_PT) REFERENCES ct_phieu_thue(ID_CT_PT), 
+    FOREIGN KEY (ID_PHU_THU) REFERENCES phu_thu(ID_PHU_THU),
+    FOREIGN KEY (ID_HD) REFERENCES hoa_don(ID_HD)
+);
+
+
+-- =================================================================
+-- KẾT THÚC SCRIPT
+-- =================================================================
+
