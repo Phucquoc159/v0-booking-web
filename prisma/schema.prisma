@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BoPhan {
+  idBp      String     @id @map("ID_BP") @db.VarChar(10)
+  tenBp     String?    @map("TEN_BP") @db.VarChar(100)
+  nhanViens NhanVien[]
+
+  @@map("bo_phan")
+}
+
+model NhomQuyen {
+  idNq      String     @id @map("ID_NQ") @db.VarChar(10)
+  tenNq     String?    @map("TEN_NQ") @db.VarChar(100)
+  nhanViens NhanVien[]
+
+  @@map("nhom_quyen")
+}
+
+model NhanVien {
+  idNv      String    @id @map("ID_NV") @db.VarChar(10)
+  ho        String    @map("HO") @db.VarChar(50)
+  ten       String    @map("TEN") @db.VarChar(10)
+  phai      String?   @map("PHAI") @db.VarChar(10)
+  ngaySinh  DateTime? @map("NGAY_SINH") @db.Date
+  diaChi    String?   @map("DIA_CHI") @db.VarChar(100)
+  sdt       String    @map("SDT") @db.VarChar(15)
+  email     String    @unique @map("EMAIL") @db.VarChar(50)
+  hinh      String?   @map("HINH") @db.VarChar(100)
+  username  String    @unique @map("USERNAME") @db.VarChar(50)
+  password  String    @map("PASSWORD") @db.VarChar(255)
+  idBp      String    @map("ID_BP") @db.VarChar(10)
+  idNq      String    @map("ID_NQ") @db.VarChar(10)
+
+  boPhan    BoPhan     @relation(fields: [idBp], references: [idBp])
+  nhomQuyen NhomQuyen  @relation(fields: [idNq], references: [idNq])
+
+  @@map("nhan_vien")
+}
