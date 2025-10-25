@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../lib/generated/prisma"
@@ -14,39 +11,432 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Bảng khách hàng
+model KhachHang {
+  cccd        String       @id @map("CCCD") @db.VarChar(20)
+  ho          String       @map("HO") @db.VarChar(50)
+  ten         String       @map("TEN") @db.VarChar(50)
+  sdt         String?      @map("SDT") @db.VarChar(15)
+  email       String?      @unique @map("EMAIL") @db.VarChar(50)
+  diaChi      String?      @map("DIA_CHI") @db.VarChar(100)
+  maSoThue    String?      @map("MA_SO_THUE") @db.VarChar(20)
+  matKhau     String?      @map("MAT_KHAU") @db.VarChar(255)
+  
+  phieuDats   PhieuDat[]
+  phieuThues  PhieuThue[]
+  ctKhachOs   CtKhachO[]
+
+  @@map("khach_hang")
+}
+
+// Bảng bộ phận
 model BoPhan {
-  idBp      String     @id @map("ID_BP") @db.VarChar(10)
-  tenBp     String?    @map("TEN_BP") @db.VarChar(100)
-  nhanViens NhanVien[]
+  idBp       String      @id @map("ID_BP") @db.VarChar(10)
+  tenBp      String      @map("TEN_BP") @db.VarChar(50)
+  
+  nhanViens  NhanVien[]
+  quanLys    QuanLy[]
 
   @@map("bo_phan")
 }
 
+// Bảng nhóm quyền
 model NhomQuyen {
-  idNq      String     @id @map("ID_NQ") @db.VarChar(10)
-  tenNq     String?    @map("TEN_NQ") @db.VarChar(100)
-  nhanViens NhanVien[]
+  idNq       String      @id @map("ID_NQ") @db.VarChar(10)
+  tenNc      String      @map("TEN_NC") @db.VarChar(50)
+  
+  nhanViens  NhanVien[]
 
   @@map("nhom_quyen")
 }
 
+// Bảng nhân viên
 model NhanVien {
-  idNv      String    @id @map("ID_NV") @db.VarChar(10)
-  ho        String    @map("HO") @db.VarChar(50)
-  ten       String    @map("TEN") @db.VarChar(10)
-  phai      String?   @map("PHAI") @db.VarChar(10)
-  ngaySinh  DateTime? @map("NGAY_SINH") @db.Date
-  diaChi    String?   @map("DIA_CHI") @db.VarChar(100)
-  sdt       String    @map("SDT") @db.VarChar(15)
-  email     String    @unique @map("EMAIL") @db.VarChar(50)
-  hinh      String?   @map("HINH") @db.VarChar(100)
-  username  String    @unique @map("USERNAME") @db.VarChar(50)
-  password  String    @map("PASSWORD") @db.VarChar(255)
-  idBp      String    @map("ID_BP") @db.VarChar(10)
-  idNq      String    @map("ID_NQ") @db.VarChar(10)
-
-  boPhan    BoPhan     @relation(fields: [idBp], references: [idBp])
-  nhomQuyen NhomQuyen  @relation(fields: [idNq], references: [idNq])
+  idNv       String    @id @map("ID_NV") @db.VarChar(10)
+  ho         String    @map("HO") @db.VarChar(50)
+  ten        String    @map("TEN") @db.VarChar(10)
+  phai       String?   @map("PHAI") @db.VarChar(10)
+  ngaySinh   DateTime? @map("NGAY_SINH") @db.Date
+  diaChi     String?   @map("DIA_CHI") @db.VarChar(100)
+  sdt        String    @map("SDT") @db.VarChar(15)
+  email      String    @unique @map("EMAIL") @db.VarChar(50)
+  hinh       String?   @map("HINH") @db.VarChar(100)
+  username   String    @unique @map("USERNAME") @db.VarChar(50)
+  password   String    @map("PASSWORD") @db.VarChar(255)
+  idBp       String    @map("ID_BP") @db.VarChar(10)
+  idNq       String    @map("ID_NQ") @db.VarChar(10)
+  
+  boPhan          BoPhan           @relation(fields: [idBp], references: [idBp])
+  nhomQuyen       NhomQuyen        @relation(fields: [idNq], references: [idNq])
+  quanLys         QuanLy[]
+  giaHangPhongs   GiaHangPhong[]
+  giaDichVus      GiaDichVu[]
+  giaPhuThus      GiaPhuThu[]
+  phieuDats       PhieuDat[]
+  phieuThues      PhieuThue[]
+  hoaDons         HoaDon[]
 
   @@map("nhan_vien")
+}
+
+// Bảng quản lý
+model QuanLy {
+  idBp      String   @map("ID_BP") @db.VarChar(10)
+  manv      String   @map("MANV") @db.VarChar(10)
+  ngayBdQl  DateTime @map("NGAYBDQL") @db.Date
+  
+  boPhan    BoPhan   @relation(fields: [idBp], references: [idBp])
+  nhanVien  NhanVien @relation(fields: [manv], references: [idNv])
+
+  @@id([idBp, manv])
+  @@map("quan_ly")
+}
+
+// Bảng loại phòng
+model LoaiPhong {
+  idLp        String       @id @map("ID_LP") @db.VarChar(10)
+  tenLp       String       @map("TEN_LP") @db.VarChar(50)
+  moTa        String?      @map("MO_TA") @db.VarChar(100)
+  
+  hangPhongs  HangPhong[]
+
+  @@map("loai_phong")
+}
+
+// Bảng kiểu phòng
+model KieuPhong {
+  idKp           String       @id @map("ID_KP") @db.VarChar(10)
+  tenKp          String       @map("TEN_KP") @db.VarChar(50)
+  moTa           String?      @map("MO_TA") @db.VarChar(100)
+  soLuongKhach   Int?         @map("SO_LUONG_KHACH")
+  
+  hangPhongs     HangPhong[]
+
+  @@map("kieu_phong")
+}
+
+// Bảng hạng phòng
+model HangPhong {
+  idHangPhong     String            @id @map("ID_HANG_PHONG") @db.VarChar(10)
+  idKp            String            @map("ID_KP") @db.VarChar(10)
+  idLp            String            @map("ID_LP") @db.VarChar(10)
+  
+  kieuPhong       KieuPhong         @relation(fields: [idKp], references: [idKp])
+  loaiPhong       LoaiPhong         @relation(fields: [idLp], references: [idLp])
+  giaHangPhongs   GiaHangPhong[]
+  anhHangPhongs   AnhHangPhong[]
+  phongs          Phong[]
+  ctTienNghis     CtTienNghi[]
+  ctKhuyenMais    CtKhuyenMai[]
+  ctPhieuDats     CtPhieuDat[]
+
+  @@map("hang_phong")
+}
+
+// Bảng giá hạng phòng
+model GiaHangPhong {
+  idHangPhong   String      @map("ID_HANG_PHONG") @db.VarChar(10)
+  ngayApDung    DateTime    @map("NGAYAPDUNG") @db.Date
+  gia           Decimal     @map("GIA") @db.Decimal(10, 2)
+  ngayThietLap  DateTime    @map("NGAY_THIET_LAP") @db.Date
+  idNv          String      @map("ID_NV") @db.VarChar(10)
+  
+  hangPhong     HangPhong   @relation(fields: [idHangPhong], references: [idHangPhong])
+  nhanVien      NhanVien    @relation(fields: [idNv], references: [idNv])
+
+  @@id([idHangPhong, ngayApDung])
+  @@map("gia_hang_phong")
+}
+
+// Bảng ảnh hạng phòng
+model AnhHangPhong {
+  idAnhHangPhong  String     @id @map("ID_ANH_HANG_PHONG") @db.VarChar(10)
+  urlAnh          String     @map("URL_ANH") @db.VarChar(100)
+  idHangPhong     String     @map("ID_HANG_PHONG") @db.VarChar(10)
+  
+  hangPhong       HangPhong  @relation(fields: [idHangPhong], references: [idHangPhong])
+
+  @@map("anh_hang_phong")
+}
+
+// Bảng trạng thái
+model TrangThai {
+  idTt          String  @id @map("ID_TT") @db.VarChar(10)
+  tenTrangThai  String  @map("TEN_TRANG_THAI") @db.VarChar(50)
+  
+  phongs        Phong[]
+
+  @@map("trang_thai")
+}
+
+// Bảng phòng
+model Phong {
+  soPhong      String        @id @map("SOPHONG") @db.VarChar(10)
+  tang         Int           @map("TANG")
+  idHangPhong  String        @map("ID_HANG_PHONG") @db.VarChar(10)
+  idTt         String        @map("ID_TT") @db.VarChar(10)
+  
+  hangPhong    HangPhong     @relation(fields: [idHangPhong], references: [idHangPhong])
+  trangThai    TrangThai     @relation(fields: [idTt], references: [idTt])
+  ctPhieuThues CtPhieuThue[]
+  doiPhongsMoi DoiPhong[]    @relation("PhongMoi")
+
+  @@map("phong")
+}
+
+// Bảng tiện nghi
+model TienNghi {
+  idTn        String        @id @map("ID_TN") @db.VarChar(10)
+  tenTn       String        @map("TEN_TN") @db.VarChar(50)
+  icon        String?       @map("ICON") @db.VarChar(100)
+  moTa        String?       @map("MO_TA") @db.VarChar(100)
+  
+  ctTienNghis CtTienNghi[]
+
+  @@map("tien_nghi")
+}
+
+// Bảng chi tiết tiện nghi
+model CtTienNghi {
+  idTn         String     @map("ID_TN") @db.VarChar(10)
+  idHangPhong  String     @map("ID_HANG_PHONG") @db.VarChar(10)
+  soLuong      Int        @map("SO_LUONG")
+  
+  tienNghi     TienNghi   @relation(fields: [idTn], references: [idTn])
+  hangPhong    HangPhong  @relation(fields: [idHangPhong], references: [idHangPhong])
+
+  @@id([idTn, idHangPhong])
+  @@map("cttiennghi")
+}
+
+// Bảng khuyến mãi
+model KhuyenMai {
+  idKm          String         @id @map("ID_KM") @db.VarChar(10)
+  moTaKm        String         @map("MO_TA_KM") @db.VarChar(100)
+  ngayBatDau    DateTime       @map("NGAY_BAT_DAU") @db.Date
+  ngayKetThuc   DateTime       @map("NGAY_KET_THUC") @db.Date
+  
+  ctKhuyenMais  CtKhuyenMai[]
+
+  @@map("khuyenmai")
+}
+
+// Bảng chi tiết khuyến mãi
+model CtKhuyenMai {
+  idKm            String     @map("ID_KM") @db.VarChar(10)
+  idHangPhong     String     @map("ID_HANG_PHONG") @db.VarChar(10)
+  phanTramGiam    Decimal    @map("PHAN_TRAM_GIAM") @db.Decimal(5, 2)
+  
+  khuyenMai       KhuyenMai  @relation(fields: [idKm], references: [idKm])
+  hangPhong       HangPhong  @relation(fields: [idHangPhong], references: [idHangPhong])
+
+  @@id([idKm, idHangPhong])
+  @@map("ctkhuyenmai")
+}
+
+// Bảng phiếu đặt
+model PhieuDat {
+  idPd         String       @id @map("ID_PD") @db.VarChar(10)
+  ngayDat      DateTime     @map("NGAY_DAT") @db.Date
+  ngayBdThue   DateTime     @map("NGAY_BD_THUE") @db.Date
+  ngayDi       DateTime     @map("NGAY_DI") @db.Date
+  trangThai    String       @map("TRANG_THAI") @db.VarChar(20)
+  soTienCoc    Decimal      @map("SO_TIEN_COC") @db.Decimal(10, 2)
+  cccd         String       @map("CCCD") @db.VarChar(20)
+  idNv         String?      @map("ID_NV") @db.VarChar(10)
+  
+  khachHang    KhachHang    @relation(fields: [cccd], references: [cccd])
+  nhanVien     NhanVien?    @relation(fields: [idNv], references: [idNv])
+  ctPhieuDats  CtPhieuDat[]
+  phieuThues   PhieuThue[]
+
+  @@map("phieudat")
+}
+
+// Bảng chi tiết phiếu đặt
+model CtPhieuDat {
+  idPd           String     @map("ID_PD") @db.VarChar(10)
+  idHangPhong    String     @map("ID_HANG_PHONG") @db.VarChar(10)
+  soLuongPhongO  Int        @map("SO_LUONG_PHONG_O")
+  donGia         Decimal    @map("DON_GIA") @db.Decimal(10, 2)
+  
+  phieuDat       PhieuDat   @relation(fields: [idPd], references: [idPd])
+  hangPhong      HangPhong  @relation(fields: [idHangPhong], references: [idHangPhong])
+
+  @@id([idPd, idHangPhong])
+  @@map("ctphieudat")
+}
+
+// Bảng phiếu thuê
+model PhieuThue {
+  idPt          String        @id @map("ID_PT") @db.VarChar(10)
+  ngayLap       DateTime      @map("NGAY_LAP") @db.Date
+  idNv          String        @map("ID_NV") @db.VarChar(10)
+  cccd          String        @map("CCCD") @db.VarChar(20)
+  idPd          String?       @map("ID_PD") @db.VarChar(10)
+  
+  nhanVien      NhanVien      @relation(fields: [idNv], references: [idNv])
+  khachHang     KhachHang     @relation(fields: [cccd], references: [cccd])
+  phieuDat      PhieuDat?     @relation(fields: [idPd], references: [idPd])
+  hoaDons       HoaDon[]
+  ctPhieuThues  CtPhieuThue[]
+
+  @@map("phieuthue")
+}
+
+// Bảng hóa đơn
+model HoaDon {
+  idHd         String        @id @map("ID_HD") @db.VarChar(10)
+  ngayLap      DateTime      @map("NGAY_LAP") @db.Date
+  idNv         String        @map("ID_NV") @db.VarChar(10)
+  idPt         String        @map("ID_PT") @db.VarChar(10)
+  tongTien     Decimal       @map("TONG_TIEN") @db.Decimal(10, 2)
+  trangThai    String        @map("TRANG_THAI") @db.VarChar(20)
+  soTienGiam   Decimal?      @map("SOTIENGIAM") @db.Decimal(10, 2)
+  
+  nhanVien     NhanVien      @relation(fields: [idNv], references: [idNv])
+  phieuThue    PhieuThue     @relation(fields: [idPt], references: [idPt])
+  ctPhieuThues CtPhieuThue[]
+  ctDichVus    CtDichVu[]
+  ctPhuThus    CtPhuThu[]
+
+  @@map("hoa_don")
+}
+
+// Bảng chi tiết phiếu thuê
+model CtPhieuThue {
+  idCtPt        Int          @id @map("ID_CT_PT")
+  ngayDen       DateTime     @map("NGAY_DEN") @db.Date
+  gioDen        DateTime?    @map("GIO_DEN") @db.Time
+  ngayDi        DateTime?    @map("NGAY_DI") @db.Date
+  donGia        Decimal      @map("DON_GIA") @db.Decimal(10, 2)
+  ttThanhToan   String       @map("TT_THANH_TOAN") @db.VarChar(20)
+  idPt          String       @map("ID_PT") @db.VarChar(10)
+  soPhong       String       @map("SO_PHONG") @db.VarChar(10)
+  idHd          String?      @map("ID_HD") @db.VarChar(10)
+  
+  phieuThue     PhieuThue    @relation(fields: [idPt], references: [idPt])
+  phong         Phong        @relation(fields: [soPhong], references: [soPhong])
+  hoaDon        HoaDon?      @relation(fields: [idHd], references: [idHd])
+  ctKhachOs     CtKhachO[]
+  doiPhongs     DoiPhong[]
+  ctDichVus     CtDichVu[]
+  ctPhuThus     CtPhuThu[]
+
+  @@map("ct_phieu_thue")
+}
+
+// Bảng chi tiết khách ở
+model CtKhachO {
+  idCtPt       Int          @map("ID_CT_PT")
+  cmnd         String       @map("CMND") @db.VarChar(20)
+  
+  ctPhieuThue  CtPhieuThue  @relation(fields: [idCtPt], references: [idCtPt])
+  khachHang    KhachHang    @relation(fields: [cmnd], references: [cccd])
+
+  @@id([idCtPt, cmnd])
+  @@map("ctkhacho")
+}
+
+// Bảng đổi phòng
+model DoiPhong {
+  idCtPt      Int          @map("ID_CT_PT")
+  soPhongMoi  String       @map("SOPHONGMOI") @db.VarChar(10)
+  ngayDen     DateTime     @map("NGAY_DEN") @db.Date
+  ngayDi      DateTime?    @map("NGAY_DI") @db.Date
+  soPhongCu   String?      @map("SOPHONGCU") @db.VarChar(10)
+  
+  ctPhieuThue CtPhieuThue  @relation(fields: [idCtPt], references: [idCtPt])
+  phongMoi    Phong        @relation("PhongMoi", fields: [soPhongMoi], references: [soPhong])
+
+  @@id([idCtPt, soPhongMoi])
+  @@map("doiphong")
+}
+
+// Bảng dịch vụ
+model DichVu {
+  idDv        String       @id @map("ID_DV") @db.VarChar(10)
+  tenDv       String       @map("TEN_DV") @db.VarChar(50)
+  moTa        String?      @map("MO_TA") @db.VarChar(100)
+  donViTinh   String       @map("DON_VI_TINH") @db.VarChar(20)
+  
+  giaDichVus  GiaDichVu[]
+  ctDichVus   CtDichVu[]
+
+  @@map("dich_vu")
+}
+
+// Bảng giá dịch vụ
+model GiaDichVu {
+  idDv        String     @map("ID_DV") @db.VarChar(10)
+  ngayApDung  DateTime   @map("NGAY_AP_DUNG") @db.Date
+  gia         Decimal    @map("GIA") @db.Decimal(10, 2)
+  idNv        String     @map("ID_NV") @db.VarChar(10)
+  
+  dichVu      DichVu     @relation(fields: [idDv], references: [idDv])
+  nhanVien    NhanVien   @relation(fields: [idNv], references: [idNv])
+
+  @@id([idDv, ngayApDung])
+  @@map("gia_dich_vu")
+}
+
+// Bảng chi tiết dịch vụ
+model CtDichVu {
+  idCtPt       Int          @map("ID_CT_PT")
+  idDv         String       @map("ID_DV") @db.VarChar(10)
+  ngaySuDung   DateTime     @map("NGAY_SU_DUNG") @db.Date
+  donGia       Decimal      @map("DON_GIA") @db.Decimal(10, 2)
+  soLuong      Int          @map("SO_LUONG")
+  ttThanhToan  String       @map("TT_THANH_TOAN") @db.VarChar(20)
+  idHd         String?      @map("ID_HD") @db.VarChar(10)
+  
+  ctPhieuThue  CtPhieuThue  @relation(fields: [idCtPt], references: [idCtPt])
+  dichVu       DichVu       @relation(fields: [idDv], references: [idDv])
+  hoaDon       HoaDon?      @relation(fields: [idHd], references: [idHd])
+
+  @@id([idCtPt, idDv, ngaySuDung])
+  @@map("ct_dich_vu")
+}
+
+// Bảng phụ thu
+model PhuThu {
+  idPhuThu    String       @id @map("ID_PHU_THU") @db.VarChar(10)
+  tenPhuThu   String       @map("TEN_PHU_THU") @db.VarChar(50)
+  lyDo        String?      @map("LY_DO") @db.VarChar(100)
+  
+  giaPhuThus  GiaPhuThu[]
+  ctPhuThus   CtPhuThu[]
+
+  @@map("phu_thu")
+}
+
+// Bảng giá phụ thu
+model GiaPhuThu {
+  idPhuThu    String     @map("ID_PHU_THU") @db.VarChar(10)
+  ngayApDung  DateTime   @map("NGAY_AP_DUNG") @db.Date
+  gia         Decimal    @map("GIA") @db.Decimal(10, 2)
+  idNv        String     @map("ID_NV") @db.VarChar(10)
+  
+  phuThu      PhuThu     @relation(fields: [idPhuThu], references: [idPhuThu])
+  nhanVien    NhanVien   @relation(fields: [idNv], references: [idNv])
+
+  @@id([idPhuThu, ngayApDung])
+  @@map("giaphuthu")
+}
+
+// Bảng chi tiết phụ thu
+model CtPhuThu {
+  idPhuThu     String       @map("ID_PHU_THU") @db.VarChar(10)
+  idCtPt       Int          @map("ID_CT_PT")
+  ttThanhToan  String       @map("TT_THANH_TOAN") @db.VarChar(20)
+  donGia       Decimal      @map("DON_GIA") @db.Decimal(10, 2)
+  soLuong      Int          @map("SO_LUONG")
+  idHd         String?      @map("ID_HD") @db.VarChar(10)
+  
+  phuThu       PhuThu       @relation(fields: [idPhuThu], references: [idPhuThu])
+  ctPhieuThue  CtPhieuThue  @relation(fields: [idCtPt], references: [idCtPt])
+  hoaDon       HoaDon?      @relation(fields: [idHd], references: [idHd])
+
+  @@id([idPhuThu, idCtPt])
+  @@map("ct_phu_thu")
 }

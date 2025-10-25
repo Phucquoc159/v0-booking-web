@@ -1,0 +1,409 @@
+/*
+  Warnings:
+
+  - You are about to alter the column `TEN_BP` on the `bo_phan` table. The data in that column could be lost. The data in that column will be cast from `VarChar(100)` to `VarChar(50)`.
+  - You are about to drop the column `TEN_NQ` on the `nhom_quyen` table. All the data in the column will be lost.
+  - Made the column `TEN_BP` on table `bo_phan` required. This step will fail if there are existing NULL values in that column.
+  - Added the required column `TEN_NC` to the `nhom_quyen` table without a default value. This is not possible if the table is not empty.
+
+*/
+-- AlterTable
+ALTER TABLE "bo_phan" ALTER COLUMN "TEN_BP" SET NOT NULL,
+ALTER COLUMN "TEN_BP" SET DATA TYPE VARCHAR(50);
+
+-- AlterTable
+ALTER TABLE "nhom_quyen" DROP COLUMN "TEN_NQ",
+ADD COLUMN     "TEN_NC" VARCHAR(50) NOT NULL;
+
+-- CreateTable
+CREATE TABLE "khach_hang" (
+    "CCCD" VARCHAR(20) NOT NULL,
+    "HO" VARCHAR(50) NOT NULL,
+    "TEN" VARCHAR(50) NOT NULL,
+    "SDT" VARCHAR(15),
+    "EMAIL" VARCHAR(50),
+    "DIA_CHI" VARCHAR(100),
+    "MA_SO_THUE" VARCHAR(20),
+    "MAT_KHAU" VARCHAR(255),
+
+    CONSTRAINT "khach_hang_pkey" PRIMARY KEY ("CCCD")
+);
+
+-- CreateTable
+CREATE TABLE "quan_ly" (
+    "ID_BP" VARCHAR(10) NOT NULL,
+    "MANV" VARCHAR(10) NOT NULL,
+    "NGAYBDQL" DATE NOT NULL,
+
+    CONSTRAINT "quan_ly_pkey" PRIMARY KEY ("ID_BP","MANV")
+);
+
+-- CreateTable
+CREATE TABLE "loai_phong" (
+    "ID_LP" VARCHAR(10) NOT NULL,
+    "TEN_LP" VARCHAR(50) NOT NULL,
+    "MO_TA" VARCHAR(100),
+
+    CONSTRAINT "loai_phong_pkey" PRIMARY KEY ("ID_LP")
+);
+
+-- CreateTable
+CREATE TABLE "kieu_phong" (
+    "ID_KP" VARCHAR(10) NOT NULL,
+    "TEN_KP" VARCHAR(50) NOT NULL,
+    "MO_TA" VARCHAR(100),
+    "SO_LUONG_KHACH" INTEGER,
+
+    CONSTRAINT "kieu_phong_pkey" PRIMARY KEY ("ID_KP")
+);
+
+-- CreateTable
+CREATE TABLE "hang_phong" (
+    "ID_HANG_PHONG" VARCHAR(10) NOT NULL,
+    "ID_KP" VARCHAR(10) NOT NULL,
+    "ID_LP" VARCHAR(10) NOT NULL,
+
+    CONSTRAINT "hang_phong_pkey" PRIMARY KEY ("ID_HANG_PHONG")
+);
+
+-- CreateTable
+CREATE TABLE "gia_hang_phong" (
+    "ID_HANG_PHONG" VARCHAR(10) NOT NULL,
+    "NGAYAPDUNG" DATE NOT NULL,
+    "GIA" DECIMAL(10,2) NOT NULL,
+    "NGAY_THIET_LAP" DATE NOT NULL,
+    "ID_NV" VARCHAR(10) NOT NULL,
+
+    CONSTRAINT "gia_hang_phong_pkey" PRIMARY KEY ("ID_HANG_PHONG","NGAYAPDUNG")
+);
+
+-- CreateTable
+CREATE TABLE "anh_hang_phong" (
+    "ID_ANH_HANG_PHONG" VARCHAR(10) NOT NULL,
+    "URL_ANH" VARCHAR(100) NOT NULL,
+    "ID_HANG_PHONG" VARCHAR(10) NOT NULL,
+
+    CONSTRAINT "anh_hang_phong_pkey" PRIMARY KEY ("ID_ANH_HANG_PHONG")
+);
+
+-- CreateTable
+CREATE TABLE "trang_thai" (
+    "ID_TT" VARCHAR(10) NOT NULL,
+    "TEN_TRANG_THAI" VARCHAR(50) NOT NULL,
+
+    CONSTRAINT "trang_thai_pkey" PRIMARY KEY ("ID_TT")
+);
+
+-- CreateTable
+CREATE TABLE "phong" (
+    "SOPHONG" VARCHAR(10) NOT NULL,
+    "TANG" INTEGER NOT NULL,
+    "ID_HANG_PHONG" VARCHAR(10) NOT NULL,
+    "ID_TT" VARCHAR(10) NOT NULL,
+
+    CONSTRAINT "phong_pkey" PRIMARY KEY ("SOPHONG")
+);
+
+-- CreateTable
+CREATE TABLE "tien_nghi" (
+    "ID_TN" VARCHAR(10) NOT NULL,
+    "TEN_TN" VARCHAR(50) NOT NULL,
+    "ICON" VARCHAR(100),
+    "MO_TA" VARCHAR(100),
+
+    CONSTRAINT "tien_nghi_pkey" PRIMARY KEY ("ID_TN")
+);
+
+-- CreateTable
+CREATE TABLE "cttiennghi" (
+    "ID_TN" VARCHAR(10) NOT NULL,
+    "ID_HANG_PHONG" VARCHAR(10) NOT NULL,
+    "SO_LUONG" INTEGER NOT NULL,
+
+    CONSTRAINT "cttiennghi_pkey" PRIMARY KEY ("ID_TN","ID_HANG_PHONG")
+);
+
+-- CreateTable
+CREATE TABLE "khuyenmai" (
+    "ID_KM" VARCHAR(10) NOT NULL,
+    "MO_TA_KM" VARCHAR(100) NOT NULL,
+    "NGAY_BAT_DAU" DATE NOT NULL,
+    "NGAY_KET_THUC" DATE NOT NULL,
+
+    CONSTRAINT "khuyenmai_pkey" PRIMARY KEY ("ID_KM")
+);
+
+-- CreateTable
+CREATE TABLE "ctkhuyenmai" (
+    "ID_KM" VARCHAR(10) NOT NULL,
+    "ID_HANG_PHONG" VARCHAR(10) NOT NULL,
+    "PHAN_TRAM_GIAM" DECIMAL(5,2) NOT NULL,
+
+    CONSTRAINT "ctkhuyenmai_pkey" PRIMARY KEY ("ID_KM","ID_HANG_PHONG")
+);
+
+-- CreateTable
+CREATE TABLE "phieudat" (
+    "ID_PD" VARCHAR(10) NOT NULL,
+    "NGAY_DAT" DATE NOT NULL,
+    "NGAY_BD_THUE" DATE NOT NULL,
+    "NGAY_DI" DATE NOT NULL,
+    "TRANG_THAI" VARCHAR(20) NOT NULL,
+    "SO_TIEN_COC" DECIMAL(10,2) NOT NULL,
+    "CCCD" VARCHAR(20) NOT NULL,
+    "ID_NV" VARCHAR(10),
+
+    CONSTRAINT "phieudat_pkey" PRIMARY KEY ("ID_PD")
+);
+
+-- CreateTable
+CREATE TABLE "ctphieudat" (
+    "ID_PD" VARCHAR(10) NOT NULL,
+    "ID_HANG_PHONG" VARCHAR(10) NOT NULL,
+    "SO_LUONG_PHONG_O" INTEGER NOT NULL,
+    "DON_GIA" DECIMAL(10,2) NOT NULL,
+
+    CONSTRAINT "ctphieudat_pkey" PRIMARY KEY ("ID_PD","ID_HANG_PHONG")
+);
+
+-- CreateTable
+CREATE TABLE "phieuthue" (
+    "ID_PT" VARCHAR(10) NOT NULL,
+    "NGAY_LAP" DATE NOT NULL,
+    "ID_NV" VARCHAR(10) NOT NULL,
+    "CCCD" VARCHAR(20) NOT NULL,
+    "ID_PD" VARCHAR(10),
+
+    CONSTRAINT "phieuthue_pkey" PRIMARY KEY ("ID_PT")
+);
+
+-- CreateTable
+CREATE TABLE "hoa_don" (
+    "ID_HD" VARCHAR(10) NOT NULL,
+    "NGAY_LAP" DATE NOT NULL,
+    "ID_NV" VARCHAR(10) NOT NULL,
+    "ID_PT" VARCHAR(10) NOT NULL,
+    "TONG_TIEN" DECIMAL(10,2) NOT NULL,
+    "TRANG_THAI" VARCHAR(20) NOT NULL,
+    "SOTIENGIAM" DECIMAL(10,2),
+
+    CONSTRAINT "hoa_don_pkey" PRIMARY KEY ("ID_HD")
+);
+
+-- CreateTable
+CREATE TABLE "ct_phieu_thue" (
+    "ID_CT_PT" INTEGER NOT NULL,
+    "NGAY_DEN" DATE NOT NULL,
+    "GIO_DEN" TIME,
+    "NGAY_DI" DATE,
+    "DON_GIA" DECIMAL(10,2) NOT NULL,
+    "TT_THANH_TOAN" VARCHAR(20) NOT NULL,
+    "ID_PT" VARCHAR(10) NOT NULL,
+    "SO_PHONG" VARCHAR(10) NOT NULL,
+    "ID_HD" VARCHAR(10),
+
+    CONSTRAINT "ct_phieu_thue_pkey" PRIMARY KEY ("ID_CT_PT")
+);
+
+-- CreateTable
+CREATE TABLE "ctkhacho" (
+    "ID_CT_PT" INTEGER NOT NULL,
+    "CMND" VARCHAR(20) NOT NULL,
+
+    CONSTRAINT "ctkhacho_pkey" PRIMARY KEY ("ID_CT_PT","CMND")
+);
+
+-- CreateTable
+CREATE TABLE "doiphong" (
+    "ID_CT_PT" INTEGER NOT NULL,
+    "SOPHONGMOI" VARCHAR(10) NOT NULL,
+    "NGAY_DEN" DATE NOT NULL,
+    "NGAY_DI" DATE,
+    "SOPHONGCU" VARCHAR(10),
+
+    CONSTRAINT "doiphong_pkey" PRIMARY KEY ("ID_CT_PT","SOPHONGMOI")
+);
+
+-- CreateTable
+CREATE TABLE "dich_vu" (
+    "ID_DV" VARCHAR(10) NOT NULL,
+    "TEN_DV" VARCHAR(50) NOT NULL,
+    "MO_TA" VARCHAR(100),
+    "DON_VI_TINH" VARCHAR(20) NOT NULL,
+
+    CONSTRAINT "dich_vu_pkey" PRIMARY KEY ("ID_DV")
+);
+
+-- CreateTable
+CREATE TABLE "gia_dich_vu" (
+    "ID_DV" VARCHAR(10) NOT NULL,
+    "NGAY_AP_DUNG" DATE NOT NULL,
+    "GIA" DECIMAL(10,2) NOT NULL,
+    "ID_NV" VARCHAR(10) NOT NULL,
+
+    CONSTRAINT "gia_dich_vu_pkey" PRIMARY KEY ("ID_DV","NGAY_AP_DUNG")
+);
+
+-- CreateTable
+CREATE TABLE "ct_dich_vu" (
+    "ID_CT_PT" INTEGER NOT NULL,
+    "ID_DV" VARCHAR(10) NOT NULL,
+    "NGAY_SU_DUNG" DATE NOT NULL,
+    "DON_GIA" DECIMAL(10,2) NOT NULL,
+    "SO_LUONG" INTEGER NOT NULL,
+    "TT_THANH_TOAN" VARCHAR(20) NOT NULL,
+    "ID_HD" VARCHAR(10),
+
+    CONSTRAINT "ct_dich_vu_pkey" PRIMARY KEY ("ID_CT_PT","ID_DV","NGAY_SU_DUNG")
+);
+
+-- CreateTable
+CREATE TABLE "phu_thu" (
+    "ID_PHU_THU" VARCHAR(10) NOT NULL,
+    "TEN_PHU_THU" VARCHAR(50) NOT NULL,
+    "LY_DO" VARCHAR(100),
+
+    CONSTRAINT "phu_thu_pkey" PRIMARY KEY ("ID_PHU_THU")
+);
+
+-- CreateTable
+CREATE TABLE "giaphuthu" (
+    "ID_PHU_THU" VARCHAR(10) NOT NULL,
+    "NGAY_AP_DUNG" DATE NOT NULL,
+    "GIA" DECIMAL(10,2) NOT NULL,
+    "ID_NV" VARCHAR(10) NOT NULL,
+
+    CONSTRAINT "giaphuthu_pkey" PRIMARY KEY ("ID_PHU_THU","NGAY_AP_DUNG")
+);
+
+-- CreateTable
+CREATE TABLE "ct_phu_thu" (
+    "ID_PHU_THU" VARCHAR(10) NOT NULL,
+    "ID_CT_PT" INTEGER NOT NULL,
+    "TT_THANH_TOAN" VARCHAR(20) NOT NULL,
+    "DON_GIA" DECIMAL(10,2) NOT NULL,
+    "SO_LUONG" INTEGER NOT NULL,
+    "ID_HD" VARCHAR(10),
+
+    CONSTRAINT "ct_phu_thu_pkey" PRIMARY KEY ("ID_PHU_THU","ID_CT_PT")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "khach_hang_EMAIL_key" ON "khach_hang"("EMAIL");
+
+-- AddForeignKey
+ALTER TABLE "quan_ly" ADD CONSTRAINT "quan_ly_ID_BP_fkey" FOREIGN KEY ("ID_BP") REFERENCES "bo_phan"("ID_BP") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "quan_ly" ADD CONSTRAINT "quan_ly_MANV_fkey" FOREIGN KEY ("MANV") REFERENCES "nhan_vien"("ID_NV") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "hang_phong" ADD CONSTRAINT "hang_phong_ID_KP_fkey" FOREIGN KEY ("ID_KP") REFERENCES "kieu_phong"("ID_KP") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "hang_phong" ADD CONSTRAINT "hang_phong_ID_LP_fkey" FOREIGN KEY ("ID_LP") REFERENCES "loai_phong"("ID_LP") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "gia_hang_phong" ADD CONSTRAINT "gia_hang_phong_ID_HANG_PHONG_fkey" FOREIGN KEY ("ID_HANG_PHONG") REFERENCES "hang_phong"("ID_HANG_PHONG") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "gia_hang_phong" ADD CONSTRAINT "gia_hang_phong_ID_NV_fkey" FOREIGN KEY ("ID_NV") REFERENCES "nhan_vien"("ID_NV") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "anh_hang_phong" ADD CONSTRAINT "anh_hang_phong_ID_HANG_PHONG_fkey" FOREIGN KEY ("ID_HANG_PHONG") REFERENCES "hang_phong"("ID_HANG_PHONG") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "phong" ADD CONSTRAINT "phong_ID_HANG_PHONG_fkey" FOREIGN KEY ("ID_HANG_PHONG") REFERENCES "hang_phong"("ID_HANG_PHONG") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "phong" ADD CONSTRAINT "phong_ID_TT_fkey" FOREIGN KEY ("ID_TT") REFERENCES "trang_thai"("ID_TT") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "cttiennghi" ADD CONSTRAINT "cttiennghi_ID_TN_fkey" FOREIGN KEY ("ID_TN") REFERENCES "tien_nghi"("ID_TN") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "cttiennghi" ADD CONSTRAINT "cttiennghi_ID_HANG_PHONG_fkey" FOREIGN KEY ("ID_HANG_PHONG") REFERENCES "hang_phong"("ID_HANG_PHONG") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ctkhuyenmai" ADD CONSTRAINT "ctkhuyenmai_ID_KM_fkey" FOREIGN KEY ("ID_KM") REFERENCES "khuyenmai"("ID_KM") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ctkhuyenmai" ADD CONSTRAINT "ctkhuyenmai_ID_HANG_PHONG_fkey" FOREIGN KEY ("ID_HANG_PHONG") REFERENCES "hang_phong"("ID_HANG_PHONG") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "phieudat" ADD CONSTRAINT "phieudat_CCCD_fkey" FOREIGN KEY ("CCCD") REFERENCES "khach_hang"("CCCD") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "phieudat" ADD CONSTRAINT "phieudat_ID_NV_fkey" FOREIGN KEY ("ID_NV") REFERENCES "nhan_vien"("ID_NV") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ctphieudat" ADD CONSTRAINT "ctphieudat_ID_PD_fkey" FOREIGN KEY ("ID_PD") REFERENCES "phieudat"("ID_PD") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ctphieudat" ADD CONSTRAINT "ctphieudat_ID_HANG_PHONG_fkey" FOREIGN KEY ("ID_HANG_PHONG") REFERENCES "hang_phong"("ID_HANG_PHONG") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "phieuthue" ADD CONSTRAINT "phieuthue_ID_NV_fkey" FOREIGN KEY ("ID_NV") REFERENCES "nhan_vien"("ID_NV") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "phieuthue" ADD CONSTRAINT "phieuthue_CCCD_fkey" FOREIGN KEY ("CCCD") REFERENCES "khach_hang"("CCCD") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "phieuthue" ADD CONSTRAINT "phieuthue_ID_PD_fkey" FOREIGN KEY ("ID_PD") REFERENCES "phieudat"("ID_PD") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "hoa_don" ADD CONSTRAINT "hoa_don_ID_NV_fkey" FOREIGN KEY ("ID_NV") REFERENCES "nhan_vien"("ID_NV") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "hoa_don" ADD CONSTRAINT "hoa_don_ID_PT_fkey" FOREIGN KEY ("ID_PT") REFERENCES "phieuthue"("ID_PT") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_phieu_thue" ADD CONSTRAINT "ct_phieu_thue_ID_PT_fkey" FOREIGN KEY ("ID_PT") REFERENCES "phieuthue"("ID_PT") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_phieu_thue" ADD CONSTRAINT "ct_phieu_thue_SO_PHONG_fkey" FOREIGN KEY ("SO_PHONG") REFERENCES "phong"("SOPHONG") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_phieu_thue" ADD CONSTRAINT "ct_phieu_thue_ID_HD_fkey" FOREIGN KEY ("ID_HD") REFERENCES "hoa_don"("ID_HD") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ctkhacho" ADD CONSTRAINT "ctkhacho_ID_CT_PT_fkey" FOREIGN KEY ("ID_CT_PT") REFERENCES "ct_phieu_thue"("ID_CT_PT") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ctkhacho" ADD CONSTRAINT "ctkhacho_CMND_fkey" FOREIGN KEY ("CMND") REFERENCES "khach_hang"("CCCD") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "doiphong" ADD CONSTRAINT "doiphong_ID_CT_PT_fkey" FOREIGN KEY ("ID_CT_PT") REFERENCES "ct_phieu_thue"("ID_CT_PT") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "doiphong" ADD CONSTRAINT "doiphong_SOPHONGMOI_fkey" FOREIGN KEY ("SOPHONGMOI") REFERENCES "phong"("SOPHONG") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "gia_dich_vu" ADD CONSTRAINT "gia_dich_vu_ID_DV_fkey" FOREIGN KEY ("ID_DV") REFERENCES "dich_vu"("ID_DV") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "gia_dich_vu" ADD CONSTRAINT "gia_dich_vu_ID_NV_fkey" FOREIGN KEY ("ID_NV") REFERENCES "nhan_vien"("ID_NV") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_dich_vu" ADD CONSTRAINT "ct_dich_vu_ID_CT_PT_fkey" FOREIGN KEY ("ID_CT_PT") REFERENCES "ct_phieu_thue"("ID_CT_PT") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_dich_vu" ADD CONSTRAINT "ct_dich_vu_ID_DV_fkey" FOREIGN KEY ("ID_DV") REFERENCES "dich_vu"("ID_DV") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_dich_vu" ADD CONSTRAINT "ct_dich_vu_ID_HD_fkey" FOREIGN KEY ("ID_HD") REFERENCES "hoa_don"("ID_HD") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "giaphuthu" ADD CONSTRAINT "giaphuthu_ID_PHU_THU_fkey" FOREIGN KEY ("ID_PHU_THU") REFERENCES "phu_thu"("ID_PHU_THU") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "giaphuthu" ADD CONSTRAINT "giaphuthu_ID_NV_fkey" FOREIGN KEY ("ID_NV") REFERENCES "nhan_vien"("ID_NV") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_phu_thu" ADD CONSTRAINT "ct_phu_thu_ID_PHU_THU_fkey" FOREIGN KEY ("ID_PHU_THU") REFERENCES "phu_thu"("ID_PHU_THU") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_phu_thu" ADD CONSTRAINT "ct_phu_thu_ID_CT_PT_fkey" FOREIGN KEY ("ID_CT_PT") REFERENCES "ct_phieu_thue"("ID_CT_PT") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ct_phu_thu" ADD CONSTRAINT "ct_phu_thu_ID_HD_fkey" FOREIGN KEY ("ID_HD") REFERENCES "hoa_don"("ID_HD") ON DELETE SET NULL ON UPDATE CASCADE;
