@@ -16,6 +16,12 @@ Your project is live at:
 
 **[https://vercel.com/phucquoc159s-projects/v0-booking](https://vercel.com/phucquoc159s-projects/v0-booking)**
 
+## Run with docker:
+
+```bash
+docker-compose up --build
+```
+
 ## Build your app
 
 Continue building your app on:
