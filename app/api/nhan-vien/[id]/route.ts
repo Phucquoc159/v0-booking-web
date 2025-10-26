@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const nhanVien = await prisma.nhanVien.findUnique({
-      where: { idNv },
+      where: { id },
     })
     
     if (!nhanVien) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedNhanVien = await prisma.nhanVien.update({
-      where: { idNv },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.nhanVien.delete({
-      where: { idNv },
+      where: { id },
     })
     
     return NextResponse.json({

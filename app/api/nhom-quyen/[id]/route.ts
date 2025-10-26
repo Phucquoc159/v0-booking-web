@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const nhomQuyen = await prisma.nhomQuyen.findUnique({
-      where: { idNq },
+      where: { id },
     })
     
     if (!nhomQuyen) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedNhomQuyen = await prisma.nhomQuyen.update({
-      where: { idNq },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.nhomQuyen.delete({
-      where: { idNq },
+      where: { id },
     })
     
     return NextResponse.json({

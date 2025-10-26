@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const khuyenMai = await prisma.khuyenMai.findUnique({
-      where: { idKm },
+      where: { id },
     })
     
     if (!khuyenMai) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedKhuyenMai = await prisma.khuyenMai.update({
-      where: { idKm },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.khuyenMai.delete({
-      where: { idKm },
+      where: { id },
     })
     
     return NextResponse.json({

@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const boPhan = await prisma.boPhan.findUnique({
-      where: { idBp },
+      where: { id },
     })
     
     if (!boPhan) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedBoPhan = await prisma.boPhan.update({
-      where: { idBp },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.boPhan.delete({
-      where: { idBp },
+      where: { id },
     })
     
     return NextResponse.json({

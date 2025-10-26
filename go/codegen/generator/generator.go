@@ -297,11 +297,11 @@ export async function DELETE(
     )
   }
 }
-`, config.Model, pkField, paramName, paramName, modelCamel, modelCamel, pkField,
+`, config.Model, pkField, paramName, paramName, modelCamel, modelCamel, paramName,
 		modelCamel, modelCamel, modelCamel,
-		config.Model, pkField, paramName, paramName, string(config.Model), modelCamel, pkField,
+		config.Model, pkField, paramName, paramName, string(config.Model), modelCamel, paramName,
 		string(config.Model), config.Model,
-		config.Model, pkField, paramName, paramName, modelCamel, pkField, modelCamel))
+		config.Model, pkField, paramName, paramName, modelCamel, paramName, modelCamel))
 
 	filename := filepath.Join(dir, "route.ts")
 	return os.WriteFile(filename, []byte(g.sb.String()), 0644)

@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const phuThu = await prisma.phuThu.findUnique({
-      where: { idPhuThu },
+      where: { id },
     })
     
     if (!phuThu) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedPhuThu = await prisma.phuThu.update({
-      where: { idPhuThu },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.phuThu.delete({
-      where: { idPhuThu },
+      where: { id },
     })
     
     return NextResponse.json({

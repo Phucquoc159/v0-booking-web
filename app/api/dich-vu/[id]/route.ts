@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const dichVu = await prisma.dichVu.findUnique({
-      where: { idDv },
+      where: { id },
     })
     
     if (!dichVu) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedDichVu = await prisma.dichVu.update({
-      where: { idDv },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.dichVu.delete({
-      where: { idDv },
+      where: { id },
     })
     
     return NextResponse.json({

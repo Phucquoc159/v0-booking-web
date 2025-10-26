@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const loaiPhong = await prisma.loaiPhong.findUnique({
-      where: { idLp },
+      where: { id },
     })
     
     if (!loaiPhong) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedLoaiPhong = await prisma.loaiPhong.update({
-      where: { idLp },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.loaiPhong.delete({
-      where: { idLp },
+      where: { id },
     })
     
     return NextResponse.json({

@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const phieuThue = await prisma.phieuThue.findUnique({
-      where: { idPt },
+      where: { id },
     })
     
     if (!phieuThue) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedPhieuThue = await prisma.phieuThue.update({
-      where: { idPt },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.phieuThue.delete({
-      where: { idPt },
+      where: { id },
     })
     
     return NextResponse.json({

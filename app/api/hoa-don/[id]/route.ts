@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
     
     const hoaDon = await prisma.hoaDon.findUnique({
-      where: { idHd },
+      where: { id },
     })
     
     if (!hoaDon) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
     
     const updatedHoaDon = await prisma.hoaDon.update({
-      where: { idHd },
+      where: { id },
       data: body,
     })
     
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
     
     await prisma.hoaDon.delete({
-      where: { idHd },
+      where: { id },
     })
     
     return NextResponse.json({
