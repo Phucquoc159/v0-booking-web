@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of QuanLy
 export async function GET(request: NextRequest) {
   try {
-    const quanLys = await prisma.quanLy.findMany()
+    const quanLys = await prisma.QuanLy.findMany()
     
     return NextResponse.json({
       success: true,

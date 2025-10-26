@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of NhomQuyen
 export async function GET(request: NextRequest) {
   try {
-    const nhomQuyens = await prisma.nhomQuyen.findMany()
+    const nhomQuyens = await prisma.NhomQuyen.findMany()
     
     return NextResponse.json({
       success: true,

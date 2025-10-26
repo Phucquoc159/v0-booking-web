@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-`, config.Model, modelCamel, modelCamel, modelCamel, modelCamel, config.Model,
+`, config.Model, modelCamel, config.Model, modelCamel, modelCamel, config.Model,
 		config.Model, string(config.Model), string(config.Model), string(config.Model)))
 
 	filename := filepath.Join(dir, "route.ts")

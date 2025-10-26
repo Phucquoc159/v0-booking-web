@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of CtPhieuThue
 export async function GET(request: NextRequest) {
   try {
-    const ctPhieuThues = await prisma.ctPhieuThue.findMany()
+    const ctPhieuThues = await prisma.CtPhieuThue.findMany()
     
     return NextResponse.json({
       success: true,

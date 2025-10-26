@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of PhieuDat
 export async function GET(request: NextRequest) {
   try {
-    const phieuDats = await prisma.phieuDat.findMany()
+    const phieuDats = await prisma.PhieuDat.findMany()
     
     return NextResponse.json({
       success: true,

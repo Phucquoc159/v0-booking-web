@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of AnhHangPhong
 export async function GET(request: NextRequest) {
   try {
-    const anhHangPhongs = await prisma.anhHangPhong.findMany()
+    const anhHangPhongs = await prisma.AnhHangPhong.findMany()
     
     return NextResponse.json({
       success: true,

@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of KieuPhong
 export async function GET(request: NextRequest) {
   try {
-    const kieuPhongs = await prisma.kieuPhong.findMany()
+    const kieuPhongs = await prisma.KieuPhong.findMany()
     
     return NextResponse.json({
       success: true,

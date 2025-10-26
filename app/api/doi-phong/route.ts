@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of DoiPhong
 export async function GET(request: NextRequest) {
   try {
-    const doiPhongs = await prisma.doiPhong.findMany()
+    const doiPhongs = await prisma.DoiPhong.findMany()
     
     return NextResponse.json({
       success: true,

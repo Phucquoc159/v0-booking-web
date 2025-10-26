@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of GiaDichVu
 export async function GET(request: NextRequest) {
   try {
-    const giaDichVus = await prisma.giaDichVu.findMany()
+    const giaDichVus = await prisma.GiaDichVu.findMany()
     
     return NextResponse.json({
       success: true,
