@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const ctDichVus = await prisma.CtDichVu.findMany()
-    
+
     return NextResponse.json({
       success: true,
       data: ctDichVus,
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     const newCtDichVu = await prisma.CtDichVu.create({
       data: body,
     })
-    
+
     return NextResponse.json(
       { success: true, data: newCtDichVu },
       { status: 201 }

@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const ctTienNghis = await prisma.CtTienNghi.findMany()
-    
+
     return NextResponse.json({
       success: true,
       data: ctTienNghis,
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     const newCtTienNghi = await prisma.CtTienNghi.create({
       data: body,
     })
-    
+
     return NextResponse.json(
       { success: true, data: newCtTienNghi },
       { status: 201 }

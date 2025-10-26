@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const quanLys = await prisma.QuanLy.findMany()
-    
+
     return NextResponse.json({
       success: true,
       data: quanLys,
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     const newQuanLy = await prisma.QuanLy.create({
       data: body,
     })
-    
+
     return NextResponse.json(
       { success: true, data: newQuanLy },
       { status: 201 }

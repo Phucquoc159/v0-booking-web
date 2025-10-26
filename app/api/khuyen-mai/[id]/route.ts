@@ -10,18 +10,18 @@ export async function GET(
 ) {
   try {
     const { id } = params
-    
+
     const khuyenMai = await prisma.khuyenMai.findUnique({
       where: { id },
     })
-    
+
     if (!khuyenMai) {
       return NextResponse.json(
         { success: false, message: 'Not found' },
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       data: khuyenMai,
@@ -43,12 +43,12 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    
+
     const updatedKhuyenMai = await prisma.khuyenMai.update({
       where: { id },
       data: body,
     })
-    
+
     return NextResponse.json({
       success: true,
       data: updatedKhuyenMai,
@@ -69,11 +69,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = params
-    
+
     await prisma.khuyenMai.delete({
       where: { id },
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Deleted successfully',

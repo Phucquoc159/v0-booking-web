@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const phongs = await prisma.Phong.findMany()
-    
+
     return NextResponse.json({
       success: true,
       data: phongs,
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     const newPhong = await prisma.Phong.create({
       data: body,
     })
-    
+
     return NextResponse.json(
       { success: true, data: newPhong },
       { status: 201 }

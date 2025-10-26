@@ -160,7 +160,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const %ss = await prisma.%s.findMany()
-    
+
     return NextResponse.json({
       success: true,
       data: %ss,
@@ -178,11 +178,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     const new%s = await prisma.%s.create({
       data: body,
     })
-    
+
     return NextResponse.json(
       { success: true, data: new%s },
       { status: 201 }
@@ -221,18 +221,18 @@ export async function GET(
 ) {
   try {
     const { %s } = params
-    
+
     const %s = await prisma.%s.findUnique({
       where: { %s },
     })
-    
+
     if (!%s) {
       return NextResponse.json(
         { success: false, message: 'Not found' },
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       data: %s,
@@ -254,12 +254,12 @@ export async function PUT(
   try {
     const { %s } = params
     const body = await request.json()
-    
+
     const updated%s = await prisma.%s.update({
       where: { %s },
       data: body,
     })
-    
+
     return NextResponse.json({
       success: true,
       data: updated%s,
@@ -280,11 +280,11 @@ export async function DELETE(
 ) {
   try {
     const { %s } = params
-    
+
     await prisma.%s.delete({
       where: { %s },
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Deleted successfully',

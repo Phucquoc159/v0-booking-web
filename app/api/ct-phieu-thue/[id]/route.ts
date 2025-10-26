@@ -10,18 +10,18 @@ export async function GET(
 ) {
   try {
     const { id } = params
-    
+
     const ctPhieuThue = await prisma.ctPhieuThue.findUnique({
       where: { id },
     })
-    
+
     if (!ctPhieuThue) {
       return NextResponse.json(
         { success: false, message: 'Not found' },
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       data: ctPhieuThue,
@@ -43,12 +43,12 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    
+
     const updatedCtPhieuThue = await prisma.ctPhieuThue.update({
       where: { id },
       data: body,
     })
-    
+
     return NextResponse.json({
       success: true,
       data: updatedCtPhieuThue,
@@ -69,11 +69,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = params
-    
+
     await prisma.ctPhieuThue.delete({
       where: { id },
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Deleted successfully',

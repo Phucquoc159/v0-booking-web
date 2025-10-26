@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const khachHangs = await prisma.KhachHang.findMany()
-    
+
     return NextResponse.json({
       success: true,
       data: khachHangs,
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     const newKhachHang = await prisma.KhachHang.create({
       data: body,
     })
-    
+
     return NextResponse.json(
       { success: true, data: newKhachHang },
       { status: 201 }

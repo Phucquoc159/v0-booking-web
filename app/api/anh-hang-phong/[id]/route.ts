@@ -10,18 +10,18 @@ export async function GET(
 ) {
   try {
     const { id } = params
-    
+
     const anhHangPhong = await prisma.anhHangPhong.findUnique({
       where: { id },
     })
-    
+
     if (!anhHangPhong) {
       return NextResponse.json(
         { success: false, message: 'Not found' },
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       data: anhHangPhong,
@@ -43,12 +43,12 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    
+
     const updatedAnhHangPhong = await prisma.anhHangPhong.update({
       where: { id },
       data: body,
     })
-    
+
     return NextResponse.json({
       success: true,
       data: updatedAnhHangPhong,
@@ -69,11 +69,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = params
-    
+
     await prisma.anhHangPhong.delete({
       where: { id },
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Deleted successfully',

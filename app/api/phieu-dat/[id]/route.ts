@@ -10,18 +10,18 @@ export async function GET(
 ) {
   try {
     const { id } = params
-    
+
     const phieuDat = await prisma.phieuDat.findUnique({
       where: { id },
     })
-    
+
     if (!phieuDat) {
       return NextResponse.json(
         { success: false, message: 'Not found' },
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       data: phieuDat,
@@ -43,12 +43,12 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    
+
     const updatedPhieuDat = await prisma.phieuDat.update({
       where: { id },
       data: body,
     })
-    
+
     return NextResponse.json({
       success: true,
       data: updatedPhieuDat,
@@ -69,11 +69,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = params
-    
+
     await prisma.phieuDat.delete({
       where: { id },
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Deleted successfully',

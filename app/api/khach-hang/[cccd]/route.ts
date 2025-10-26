@@ -10,18 +10,18 @@ export async function GET(
 ) {
   try {
     const { cccd } = params
-    
+
     const khachHang = await prisma.khachHang.findUnique({
       where: { cccd },
     })
-    
+
     if (!khachHang) {
       return NextResponse.json(
         { success: false, message: 'Not found' },
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       data: khachHang,
@@ -43,12 +43,12 @@ export async function PUT(
   try {
     const { cccd } = params
     const body = await request.json()
-    
+
     const updatedKhachHang = await prisma.khachHang.update({
       where: { cccd },
       data: body,
     })
-    
+
     return NextResponse.json({
       success: true,
       data: updatedKhachHang,
@@ -69,11 +69,11 @@ export async function DELETE(
 ) {
   try {
     const { cccd } = params
-    
+
     await prisma.khachHang.delete({
       where: { cccd },
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Deleted successfully',

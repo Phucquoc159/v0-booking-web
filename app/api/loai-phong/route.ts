@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const loaiPhongs = await prisma.LoaiPhong.findMany()
-    
+
     return NextResponse.json({
       success: true,
       data: loaiPhongs,
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     const newLoaiPhong = await prisma.LoaiPhong.create({
       data: body,
     })
-    
+
     return NextResponse.json(
       { success: true, data: newLoaiPhong },
       { status: 201 }

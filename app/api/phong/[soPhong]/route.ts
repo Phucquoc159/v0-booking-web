@@ -10,18 +10,18 @@ export async function GET(
 ) {
   try {
     const { soPhong } = params
-    
+
     const phong = await prisma.phong.findUnique({
       where: { soPhong },
     })
-    
+
     if (!phong) {
       return NextResponse.json(
         { success: false, message: 'Not found' },
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       data: phong,
@@ -43,12 +43,12 @@ export async function PUT(
   try {
     const { soPhong } = params
     const body = await request.json()
-    
+
     const updatedPhong = await prisma.phong.update({
       where: { soPhong },
       data: body,
     })
-    
+
     return NextResponse.json({
       success: true,
       data: updatedPhong,
@@ -69,11 +69,11 @@ export async function DELETE(
 ) {
   try {
     const { soPhong } = params
-    
+
     await prisma.phong.delete({
       where: { soPhong },
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Deleted successfully',
