@@ -42,7 +42,7 @@ export async function updateTrangThai(
   data: Partial<Omit<TrangThai, 'idTt'>>
 ): Promise<ApiResponse<TrangThai>> {
   try {
-    const response = await fetch(`/api/trang-thai/${id}`), {
+    const response = await fetch(`/api/trang-thai/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateTrangThai(
 // Delete TrangThai
 export async function deleteTrangThai(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/trang-thai/${id}`), {
+    const response = await fetch(`/api/trang-thai/${id}`, {
       method: 'DELETE',
     })
     return await response.json()

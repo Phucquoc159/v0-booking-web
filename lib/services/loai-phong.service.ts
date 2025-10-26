@@ -42,7 +42,7 @@ export async function updateLoaiPhong(
   data: Partial<Omit<LoaiPhong, 'idLp'>>
 ): Promise<ApiResponse<LoaiPhong>> {
   try {
-    const response = await fetch(`/api/loai-phong/${id}`), {
+    const response = await fetch(`/api/loai-phong/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateLoaiPhong(
 // Delete LoaiPhong
 export async function deleteLoaiPhong(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/loai-phong/${id}`), {
+    const response = await fetch(`/api/loai-phong/${id}`, {
       method: 'DELETE',
     })
     return await response.json()

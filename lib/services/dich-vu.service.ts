@@ -42,7 +42,7 @@ export async function updateDichVu(
   data: Partial<Omit<DichVu, 'idDv'>>
 ): Promise<ApiResponse<DichVu>> {
   try {
-    const response = await fetch(`/api/dich-vu/${id}`), {
+    const response = await fetch(`/api/dich-vu/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateDichVu(
 // Delete DichVu
 export async function deleteDichVu(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/dich-vu/${id}`), {
+    const response = await fetch(`/api/dich-vu/${id}`, {
       method: 'DELETE',
     })
     return await response.json()

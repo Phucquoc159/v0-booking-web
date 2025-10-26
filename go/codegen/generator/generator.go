@@ -429,7 +429,7 @@ export async function update%s(
   data: Partial<Omit<%s, '%s'>>
 ): Promise<ApiResponse<%s>> {
   try {
-    const response = await fetch(`+"`%s/${%s}`"+`), {
+    const response = await fetch(`+"`%s/${%s}`"+`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -449,7 +449,7 @@ export async function update%s(
 		g.sb.WriteString(fmt.Sprintf(`// Delete %s
 export async function delete%s(%s: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`+"`%s/${%s}`"+`), {
+    const response = await fetch(`+"`%s/${%s}`"+`, {
       method: 'DELETE',
     })
     return await response.json()

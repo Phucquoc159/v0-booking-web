@@ -42,7 +42,7 @@ export async function updateCtPhieuThue(
   data: Partial<Omit<CtPhieuThue, 'idCtPt'>>
 ): Promise<ApiResponse<CtPhieuThue>> {
   try {
-    const response = await fetch(`/api/ct-phieu-thue/${id}`), {
+    const response = await fetch(`/api/ct-phieu-thue/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateCtPhieuThue(
 // Delete CtPhieuThue
 export async function deleteCtPhieuThue(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/ct-phieu-thue/${id}`), {
+    const response = await fetch(`/api/ct-phieu-thue/${id}`, {
       method: 'DELETE',
     })
     return await response.json()

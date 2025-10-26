@@ -42,7 +42,7 @@ export async function updateHoaDon(
   data: Partial<Omit<HoaDon, 'idHd'>>
 ): Promise<ApiResponse<HoaDon>> {
   try {
-    const response = await fetch(`/api/hoa-don/${id}`), {
+    const response = await fetch(`/api/hoa-don/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateHoaDon(
 // Delete HoaDon
 export async function deleteHoaDon(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/hoa-don/${id}`), {
+    const response = await fetch(`/api/hoa-don/${id}`, {
       method: 'DELETE',
     })
     return await response.json()
