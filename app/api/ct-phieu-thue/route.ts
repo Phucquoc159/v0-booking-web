@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Get list of CTPhieuThue
+// GET - Get list of CtPhieuThue
 export async function GET(request: NextRequest) {
   try {
     const ctPhieuThues = await prisma.ctPhieuThue.findMany()
@@ -19,21 +19,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new CTPhieuThue
+// POST - Create new CtPhieuThue
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const newCTPhieuThue = await prisma.CTPhieuThue.create({
+    const newCtPhieuThue = await prisma.CtPhieuThue.create({
       data: body,
     })
     
     return NextResponse.json(
-      { success: true, data: newctPhieuThue },
+      { success: true, data: newCtPhieuThue },
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error creating CTPhieuThue:', error)
+    console.error('Error creating CtPhieuThue:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

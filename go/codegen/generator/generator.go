@@ -54,22 +54,22 @@ const (
 	TrangThai    Model = "TrangThai"
 	Phong        Model = "Phong"
 	TienNghi     Model = "TienNghi"
-	CTTienNghi   Model = "CTTienNghi"
+	CTTienNghi   Model = "CtTienNghi"
 	KhuyenMai    Model = "KhuyenMai"
-	CTKhuyenMai  Model = "CTKhuyenMai"
+	CTKhuyenMai  Model = "CtKhuyenMai"
 	PhieuDat     Model = "PhieuDat"
-	CTPhieuDat   Model = "CTPhieuDat"
+	CTPhieuDat   Model = "CtPhieuDat"
 	PhieuThue    Model = "PhieuThue"
-	CTPhieuThue  Model = "CTPhieuThue"
+	CTPhieuThue  Model = "CtPhieuThue"
 	HoaDon       Model = "HoaDon"
-	CTKhachO     Model = "CTKhachO"
+	CTKhachO     Model = "CtKhachO"
 	DoiPhong     Model = "DoiPhong"
 	DichVu       Model = "DichVu"
 	GiaDichVu    Model = "GiaDichVu"
-	CTDichVu     Model = "CTDichVu"
+	CTDichVu     Model = "CtDichVu"
 	PhuThu       Model = "PhuThu"
 	GiaPhuThu    Model = "GiaPhuThu"
-	CTPhuThu     Model = "CTPhuThu"
+	CTPhuThu     Model = "CtPhuThu"
 )
 
 type ModelConfig struct {
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
   }
 }
 `, config.Model, modelCamel, modelCamel, modelCamel, modelCamel, config.Model,
-		config.Model, string(config.Model), modelCamel, string(config.Model)))
+		config.Model, string(config.Model), string(config.Model), string(config.Model)))
 
 	filename := filepath.Join(dir, "route.ts")
 	return os.WriteFile(filename, []byte(g.sb.String()), 0644)

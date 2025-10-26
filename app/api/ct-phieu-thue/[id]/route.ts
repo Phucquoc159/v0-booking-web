@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Get single CTPhieuThue by idCtPt
+// GET - Get single CtPhieuThue by idCtPt
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -33,7 +33,7 @@ export async function GET(
   }
 }
 
-// PUT - Update CTPhieuThue by idCtPt
+// PUT - Update CtPhieuThue by idCtPt
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -42,17 +42,17 @@ export async function PUT(
     const { id } = params
     const body = await request.json()
     
-    const updatedCTPhieuThue = await prisma.ctPhieuThue.update({
+    const updatedCtPhieuThue = await prisma.ctPhieuThue.update({
       where: { idCtPt },
       data: body,
     })
     
     return NextResponse.json({
       success: true,
-      data: updatedCTPhieuThue,
+      data: updatedCtPhieuThue,
     })
   } catch (error) {
-    console.error('Error updating CTPhieuThue:', error)
+    console.error('Error updating CtPhieuThue:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -60,7 +60,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete CTPhieuThue by idCtPt
+// DELETE - Delete CtPhieuThue by idCtPt
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Get list of CTKhachO
+// GET - Get list of CtPhieuDat
 export async function GET(request: NextRequest) {
   try {
-    const ctKhachOs = await prisma.ctKhachO.findMany()
+    const ctPhieuDats = await prisma.ctPhieuDat.findMany()
     
     return NextResponse.json({
       success: true,
-      data: ctKhachOs,
+      data: ctPhieuDats,
     })
   } catch (error) {
-    console.error('Error fetching ctKhachO:', error)
+    console.error('Error fetching ctPhieuDat:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -19,21 +19,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new CTKhachO
+// POST - Create new CtPhieuDat
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const newCTKhachO = await prisma.CTKhachO.create({
+    const newCtPhieuDat = await prisma.CtPhieuDat.create({
       data: body,
     })
     
     return NextResponse.json(
-      { success: true, data: newctKhachO },
+      { success: true, data: newCtPhieuDat },
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error creating CTKhachO:', error)
+    console.error('Error creating CtPhieuDat:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     })
     
     return NextResponse.json(
-      { success: true, data: newhoaDon },
+      { success: true, data: newHoaDon },
       { status: 201 }
     )
   } catch (error) {
