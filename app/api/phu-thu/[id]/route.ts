@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get single PhuThu by idPhuThu
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    const phuThu = await prisma.phuThu.findUnique({
+      where: { idPhuThu },
+    })
+    
+    if (!phuThu) {
+      return NextResponse.json(
+        { success: false, message: 'Not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: phuThu,
+    })
+  } catch (error) {
+    console.error('Error fetching phuThu:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update PhuThu by idPhuThu
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    const body = await request.json()
+    
+    const updatedPhuThu = await prisma.phuThu.update({
+      where: { idPhuThu },
+      data: body,
+    })
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedPhuThu,
+    })
+  } catch (error) {
+    console.error('Error updating PhuThu:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete PhuThu by idPhuThu
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    await prisma.phuThu.delete({
+      where: { idPhuThu },
+    })
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting phuThu:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

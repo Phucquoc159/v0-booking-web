@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of BoPhan
+export async function GET(request: NextRequest) {
+  try {
+    const boPhans = await prisma.boPhan.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: boPhans,
+    })
+  } catch (error) {
+    console.error('Error fetching boPhan:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new BoPhan
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newBoPhan = await prisma.BoPhan.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newboPhan },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating BoPhan:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

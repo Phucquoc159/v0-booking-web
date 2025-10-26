@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of AnhHangPhong
+export async function GET(request: NextRequest) {
+  try {
+    const anhHangPhongs = await prisma.anhHangPhong.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: anhHangPhongs,
+    })
+  } catch (error) {
+    console.error('Error fetching anhHangPhong:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new AnhHangPhong
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newAnhHangPhong = await prisma.AnhHangPhong.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newanhHangPhong },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating AnhHangPhong:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

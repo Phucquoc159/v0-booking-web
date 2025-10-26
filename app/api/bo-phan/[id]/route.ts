@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get single BoPhan by idBp
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    const boPhan = await prisma.boPhan.findUnique({
+      where: { idBp },
+    })
+    
+    if (!boPhan) {
+      return NextResponse.json(
+        { success: false, message: 'Not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: boPhan,
+    })
+  } catch (error) {
+    console.error('Error fetching boPhan:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update BoPhan by idBp
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    const body = await request.json()
+    
+    const updatedBoPhan = await prisma.boPhan.update({
+      where: { idBp },
+      data: body,
+    })
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedBoPhan,
+    })
+  } catch (error) {
+    console.error('Error updating BoPhan:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete BoPhan by idBp
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    await prisma.boPhan.delete({
+      where: { idBp },
+    })
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting boPhan:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

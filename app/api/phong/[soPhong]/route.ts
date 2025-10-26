@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get single Phong by soPhong
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { soPhong: string } }
+) {
+  try {
+    const { soPhong } = params
+    
+    const phong = await prisma.phong.findUnique({
+      where: { soPhong },
+    })
+    
+    if (!phong) {
+      return NextResponse.json(
+        { success: false, message: 'Not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: phong,
+    })
+  } catch (error) {
+    console.error('Error fetching phong:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update Phong by soPhong
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { soPhong: string } }
+) {
+  try {
+    const { soPhong } = params
+    const body = await request.json()
+    
+    const updatedPhong = await prisma.phong.update({
+      where: { soPhong },
+      data: body,
+    })
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedPhong,
+    })
+  } catch (error) {
+    console.error('Error updating Phong:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete Phong by soPhong
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { soPhong: string } }
+) {
+  try {
+    const { soPhong } = params
+    
+    await prisma.phong.delete({
+      where: { soPhong },
+    })
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting phong:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

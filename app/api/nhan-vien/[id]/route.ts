@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get single NhanVien by idNv
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    const nhanVien = await prisma.nhanVien.findUnique({
+      where: { idNv },
+    })
+    
+    if (!nhanVien) {
+      return NextResponse.json(
+        { success: false, message: 'Not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: nhanVien,
+    })
+  } catch (error) {
+    console.error('Error fetching nhanVien:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update NhanVien by idNv
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    const body = await request.json()
+    
+    const updatedNhanVien = await prisma.nhanVien.update({
+      where: { idNv },
+      data: body,
+    })
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedNhanVien,
+    })
+  } catch (error) {
+    console.error('Error updating NhanVien:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete NhanVien by idNv
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    await prisma.nhanVien.delete({
+      where: { idNv },
+    })
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting nhanVien:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

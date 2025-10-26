@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of KhachHang
+export async function GET(request: NextRequest) {
+  try {
+    const khachHangs = await prisma.khachHang.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: khachHangs,
+    })
+  } catch (error) {
+    console.error('Error fetching khachHang:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new KhachHang
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newKhachHang = await prisma.KhachHang.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newkhachHang },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating KhachHang:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

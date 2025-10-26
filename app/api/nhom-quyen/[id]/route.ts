@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get single NhomQuyen by idNq
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    const nhomQuyen = await prisma.nhomQuyen.findUnique({
+      where: { idNq },
+    })
+    
+    if (!nhomQuyen) {
+      return NextResponse.json(
+        { success: false, message: 'Not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: nhomQuyen,
+    })
+  } catch (error) {
+    console.error('Error fetching nhomQuyen:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update NhomQuyen by idNq
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    const body = await request.json()
+    
+    const updatedNhomQuyen = await prisma.nhomQuyen.update({
+      where: { idNq },
+      data: body,
+    })
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedNhomQuyen,
+    })
+  } catch (error) {
+    console.error('Error updating NhomQuyen:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete NhomQuyen by idNq
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    await prisma.nhomQuyen.delete({
+      where: { idNq },
+    })
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting nhomQuyen:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

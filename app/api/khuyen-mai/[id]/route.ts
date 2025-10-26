@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get single KhuyenMai by idKm
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    const khuyenMai = await prisma.khuyenMai.findUnique({
+      where: { idKm },
+    })
+    
+    if (!khuyenMai) {
+      return NextResponse.json(
+        { success: false, message: 'Not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: khuyenMai,
+    })
+  } catch (error) {
+    console.error('Error fetching khuyenMai:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update KhuyenMai by idKm
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    const body = await request.json()
+    
+    const updatedKhuyenMai = await prisma.khuyenMai.update({
+      where: { idKm },
+      data: body,
+    })
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedKhuyenMai,
+    })
+  } catch (error) {
+    console.error('Error updating KhuyenMai:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete KhuyenMai by idKm
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    
+    await prisma.khuyenMai.delete({
+      where: { idKm },
+    })
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting khuyenMai:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of CTDichVu
+export async function GET(request: NextRequest) {
+  try {
+    const ctDichVus = await prisma.ctDichVu.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: ctDichVus,
+    })
+  } catch (error) {
+    console.error('Error fetching ctDichVu:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new CTDichVu
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newCTDichVu = await prisma.CTDichVu.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newctDichVu },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating CTDichVu:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

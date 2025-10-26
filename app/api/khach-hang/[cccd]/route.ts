@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get single KhachHang by cccd
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { cccd: string } }
+) {
+  try {
+    const { cccd } = params
+    
+    const khachHang = await prisma.khachHang.findUnique({
+      where: { cccd },
+    })
+    
+    if (!khachHang) {
+      return NextResponse.json(
+        { success: false, message: 'Not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: khachHang,
+    })
+  } catch (error) {
+    console.error('Error fetching khachHang:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update KhachHang by cccd
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { cccd: string } }
+) {
+  try {
+    const { cccd } = params
+    const body = await request.json()
+    
+    const updatedKhachHang = await prisma.khachHang.update({
+      where: { cccd },
+      data: body,
+    })
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedKhachHang,
+    })
+  } catch (error) {
+    console.error('Error updating KhachHang:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete KhachHang by cccd
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { cccd: string } }
+) {
+  try {
+    const { cccd } = params
+    
+    await prisma.khachHang.delete({
+      where: { cccd },
+    })
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting khachHang:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of DoiPhong
+export async function GET(request: NextRequest) {
+  try {
+    const doiPhongs = await prisma.doiPhong.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: doiPhongs,
+    })
+  } catch (error) {
+    console.error('Error fetching doiPhong:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new DoiPhong
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newDoiPhong = await prisma.DoiPhong.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newdoiPhong },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating DoiPhong:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

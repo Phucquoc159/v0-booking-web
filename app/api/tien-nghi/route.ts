@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of TienNghi
+export async function GET(request: NextRequest) {
+  try {
+    const tienNghis = await prisma.tienNghi.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: tienNghis,
+    })
+  } catch (error) {
+    console.error('Error fetching tienNghi:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new TienNghi
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newTienNghi = await prisma.TienNghi.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newTienNghi },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating TienNghi:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

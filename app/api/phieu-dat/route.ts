@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of PhieuDat
+export async function GET(request: NextRequest) {
+  try {
+    const phieuDats = await prisma.phieuDat.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: phieuDats,
+    })
+  } catch (error) {
+    console.error('Error fetching phieuDat:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new PhieuDat
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newPhieuDat = await prisma.PhieuDat.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newphieuDat },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating PhieuDat:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

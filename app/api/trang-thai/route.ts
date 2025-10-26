@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of TrangThai
+export async function GET(request: NextRequest) {
+  try {
+    const trangThais = await prisma.trangThai.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: trangThais,
+    })
+  } catch (error) {
+    console.error('Error fetching trangThai:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new TrangThai
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newTrangThai = await prisma.TrangThai.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newTrangThai },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating TrangThai:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

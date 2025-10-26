@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET - Get list of DichVu
+export async function GET(request: NextRequest) {
+  try {
+    const dichVus = await prisma.dichVu.findMany()
+    
+    return NextResponse.json({
+      success: true,
+      data: dichVus,
+    })
+  } catch (error) {
+    console.error('Error fetching dichVu:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new DichVu
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    const newDichVu = await prisma.DichVu.create({
+      data: body,
+    })
+    
+    return NextResponse.json(
+      { success: true, data: newdichVu },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error creating DichVu:', error)
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
