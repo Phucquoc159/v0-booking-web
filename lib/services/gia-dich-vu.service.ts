@@ -2,7 +2,7 @@
 // do not modify it directly
 import { GiaDichVu } from '@/lib/generated/prisma'
 
-const API_URL = '/api/gia-dich-vu'
+const API_URL = 'http://localhost:3000/api/gia-dich-vu'
 
 export interface ApiResponse<T> {
   success: boolean

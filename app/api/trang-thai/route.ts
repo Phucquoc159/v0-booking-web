@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of TrangThai
 export async function GET(request: NextRequest) {
   try {
-    const trangThais = await prisma.TrangThai.findMany()
+    const trangThais = await prisma.trangThai.findMany()
 
     return NextResponse.json({
       success: true,
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const newTrangThai = await prisma.TrangThai.create({
+    const newTrangThai = await prisma.trangThai.create({
       data: body,
     })
 

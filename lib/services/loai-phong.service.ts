@@ -2,7 +2,7 @@
 // do not modify it directly
 import { LoaiPhong } from '@/lib/generated/prisma'
 
-const API_URL = '/api/loai-phong'
+const API_URL = 'http://localhost:3000/api/loai-phong'
 
 export interface ApiResponse<T> {
   success: boolean
@@ -27,7 +27,7 @@ export async function getListLoaiPhong(): Promise<ApiResponse<LoaiPhong[]>> {
 // Get LoaiPhong by idLp
 export async function getLoaiPhong(id: string): Promise<ApiResponse<LoaiPhong>> {
   try {
-    const response = await fetch(`/api/loai-phong/${id}`)
+    const response = await fetch(`http://localhost:3000/api/loai-phong/${id}`)
     return await response.json()
   } catch (error) {
     return {
@@ -42,7 +42,7 @@ export async function updateLoaiPhong(
   data: Partial<Omit<LoaiPhong, 'idLp'>>
 ): Promise<ApiResponse<LoaiPhong>> {
   try {
-    const response = await fetch(`/api/loai-phong/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/loai-phong/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateLoaiPhong(
 // Delete LoaiPhong
 export async function deleteLoaiPhong(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/loai-phong/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/loai-phong/${id}`, {
       method: 'DELETE',
     })
     return await response.json()

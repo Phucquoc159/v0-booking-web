@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of NhanVien
 export async function GET(request: NextRequest) {
   try {
-    const nhanViens = await prisma.NhanVien.findMany()
+    const nhanViens = await prisma.nhanVien.findMany()
 
     return NextResponse.json({
       success: true,
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const newNhanVien = await prisma.NhanVien.create({
+    const newNhanVien = await prisma.nhanVien.create({
       data: body,
     })
 

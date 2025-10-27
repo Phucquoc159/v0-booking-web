@@ -2,7 +2,7 @@
 // do not modify it directly
 import { KhachHang } from '@/lib/generated/prisma'
 
-const API_URL = '/api/khach-hang'
+const API_URL = 'http://localhost:3000/api/khach-hang'
 
 export interface ApiResponse<T> {
   success: boolean
@@ -27,7 +27,7 @@ export async function getListKhachHang(): Promise<ApiResponse<KhachHang[]>> {
 // Get KhachHang by cccd
 export async function getKhachHang(cccd: string): Promise<ApiResponse<KhachHang>> {
   try {
-    const response = await fetch(`/api/khach-hang/${cccd}`)
+    const response = await fetch(`http://localhost:3000/api/khach-hang/${cccd}`)
     return await response.json()
   } catch (error) {
     return {
@@ -42,7 +42,7 @@ export async function updateKhachHang(
   data: Partial<Omit<KhachHang, 'cccd'>>
 ): Promise<ApiResponse<KhachHang>> {
   try {
-    const response = await fetch(`/api/khach-hang/${cccd}`, {
+    const response = await fetch(`http://localhost:3000/api/khach-hang/${cccd}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateKhachHang(
 // Delete KhachHang
 export async function deleteKhachHang(cccd: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/khach-hang/${cccd}`, {
+    const response = await fetch(`http://localhost:3000/api/khach-hang/${cccd}`, {
       method: 'DELETE',
     })
     return await response.json()

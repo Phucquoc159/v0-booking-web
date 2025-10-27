@@ -19,7 +19,8 @@ Your project is live at:
 ## Run with docker:
 
 ```bash
-docker-compose up --build
+docker-compose up --build # for build & run
+docker compose up -d # for run only
 ```
 
 ## Build your app

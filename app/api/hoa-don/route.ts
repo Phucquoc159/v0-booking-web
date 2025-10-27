@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of HoaDon
 export async function GET(request: NextRequest) {
   try {
-    const hoaDons = await prisma.HoaDon.findMany()
+    const hoaDons = await prisma.hoaDon.findMany()
 
     return NextResponse.json({
       success: true,
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const newHoaDon = await prisma.HoaDon.create({
+    const newHoaDon = await prisma.hoaDon.create({
       data: body,
     })
 

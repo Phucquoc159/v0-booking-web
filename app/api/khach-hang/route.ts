@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of KhachHang
 export async function GET(request: NextRequest) {
   try {
-    const khachHangs = await prisma.KhachHang.findMany()
+    const khachHangs = await prisma.khachHang.findMany()
 
     return NextResponse.json({
       success: true,
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const newKhachHang = await prisma.KhachHang.create({
+    const newKhachHang = await prisma.khachHang.create({
       data: body,
     })
 

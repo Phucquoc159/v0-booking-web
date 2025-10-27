@@ -3,11 +3,12 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Edit, Trash2, Shield } from "lucide-react"
+import { getListNhanVien } from "@/lib/services"
+import { useQuery } from "@tanstack/react-query";
 
 const employees = [
   {
@@ -65,6 +66,21 @@ const statusConfig = {
 }
 
 export default function EmployeesPage() {
+const {
+    data: employees,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["employees"],
+    queryFn: getListNhanVien
+  });
+
+  if (isLoading) return <p>Đang tải dữ liệu...</p>;
+  if (isError) return <p>Lỗi: {(error as Error).message}</p>;
+
+  console.log("[DEBUG]:", employees)
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -124,7 +140,7 @@ export default function EmployeesPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Object.entries(departmentConfig).map(([dept, config]) => {
-          const count = employees.filter((e) => e.department === dept).length
+          const count = employees?.data?.filter((e) => e.idBp === dept).length
           return (
             <Card key={dept} className="bg-[#1a1a1a] border-[#2a2a2a] p-4">
               <p className="text-gray-400 text-sm mb-1">{config.label}</p>
@@ -159,28 +175,28 @@ export default function EmployeesPage() {
               </tr>
             </thead>
             <tbody>
-              {employees.map((employee) => (
-                <tr key={employee.id} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
-                  <td className="p-4 text-white font-semibold">{employee.id}</td>
-                  <td className="p-4 text-white font-medium">{employee.name}</td>
+              {employees?.data?.map((employee) => (
+                <tr key={employee.idNv} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
+                  <td className="p-4 text-white font-semibold">{employee.idNv}</td>
+                  <td className="p-4 text-white font-medium">{employee.ho + " " + employee.ten}</td>
                   <td className="p-4">
                     <div>
                       <p className="text-white text-sm">{employee.email}</p>
-                      <p className="text-gray-400 text-sm">{employee.phone}</p>
+                      <p className="text-gray-400 text-sm">{employee.sdt}</p>
                     </div>
                   </td>
                   <td className="p-4">
-                    <Badge className={departmentConfig[employee.department as keyof typeof departmentConfig].color}>
-                      {departmentConfig[employee.department as keyof typeof departmentConfig].label}
-                    </Badge>
+                    {/* <Badge className={departmentConfig[employee.idBp as keyof typeof departmentConfig].color}>
+                      {departmentConfig[employee.idBp as keyof typeof departmentConfig].label}
+                    </Badge> */}
                   </td>
-                  <td className="p-4 text-gray-400">{employee.role}</td>
+                  <td className="p-4 text-gray-400">{employee.idNq}</td>
                   <td className="p-4">
-                    <Badge className={statusConfig[employee.status as keyof typeof statusConfig].color}>
-                      {statusConfig[employee.status as keyof typeof statusConfig].label}
-                    </Badge>
+                    {/* <Badge className={statusConfig[employee.idBp as keyof typeof statusConfig].color}>
+                      {statusConfig[employee.idBp as keyof typeof statusConfig].label}
+                    </Badge> */}
                   </td>
-                  <td className="p-4 text-gray-400">{employee.joinDate}</td>
+                  <td className="p-4 text-gray-400">{String(employee.ngaySinh)}</td>
                   <td className="p-4">
                     <div className="flex gap-2">
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">

@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of DichVu
 export async function GET(request: NextRequest) {
   try {
-    const dichVus = await prisma.DichVu.findMany()
+    const dichVus = await prisma.dichVu.findMany()
 
     return NextResponse.json({
       success: true,
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const newDichVu = await prisma.DichVu.create({
+    const newDichVu = await prisma.dichVu.create({
       data: body,
     })
 

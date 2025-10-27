@@ -2,7 +2,7 @@
 // do not modify it directly
 import { QuanLy } from '@/lib/generated/prisma'
 
-const API_URL = '/api/quan-ly'
+const API_URL = 'http://localhost:3000/api/quan-ly'
 
 export interface ApiResponse<T> {
   success: boolean

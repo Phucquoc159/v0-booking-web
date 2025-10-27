@@ -2,7 +2,7 @@
 // do not modify it directly
 import { BoPhan } from '@/lib/generated/prisma'
 
-const API_URL = '/api/bo-phan'
+const API_URL = 'http://localhost:3000/api/bo-phan'
 
 export interface ApiResponse<T> {
   success: boolean
@@ -27,7 +27,7 @@ export async function getListBoPhan(): Promise<ApiResponse<BoPhan[]>> {
 // Get BoPhan by idBp
 export async function getBoPhan(id: string): Promise<ApiResponse<BoPhan>> {
   try {
-    const response = await fetch(`/api/bo-phan/${id}`)
+    const response = await fetch(`http://localhost:3000/api/bo-phan/${id}`)
     return await response.json()
   } catch (error) {
     return {
@@ -42,7 +42,7 @@ export async function updateBoPhan(
   data: Partial<Omit<BoPhan, 'idBp'>>
 ): Promise<ApiResponse<BoPhan>> {
   try {
-    const response = await fetch(`/api/bo-phan/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/bo-phan/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateBoPhan(
 // Delete BoPhan
 export async function deleteBoPhan(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/bo-phan/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/bo-phan/${id}`, {
       method: 'DELETE',
     })
     return await response.json()

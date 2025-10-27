@@ -2,7 +2,7 @@
 // do not modify it directly
 import { KhuyenMai } from '@/lib/generated/prisma'
 
-const API_URL = '/api/khuyen-mai'
+const API_URL = 'http://localhost:3000/api/khuyen-mai'
 
 export interface ApiResponse<T> {
   success: boolean
@@ -27,7 +27,7 @@ export async function getListKhuyenMai(): Promise<ApiResponse<KhuyenMai[]>> {
 // Get KhuyenMai by idKm
 export async function getKhuyenMai(id: string): Promise<ApiResponse<KhuyenMai>> {
   try {
-    const response = await fetch(`/api/khuyen-mai/${id}`)
+    const response = await fetch(`http://localhost:3000/api/khuyen-mai/${id}`)
     return await response.json()
   } catch (error) {
     return {
@@ -42,7 +42,7 @@ export async function updateKhuyenMai(
   data: Partial<Omit<KhuyenMai, 'idKm'>>
 ): Promise<ApiResponse<KhuyenMai>> {
   try {
-    const response = await fetch(`/api/khuyen-mai/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/khuyen-mai/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateKhuyenMai(
 // Delete KhuyenMai
 export async function deleteKhuyenMai(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/khuyen-mai/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/khuyen-mai/${id}`, {
       method: 'DELETE',
     })
     return await response.json()

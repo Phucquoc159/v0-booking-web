@@ -25,6 +25,7 @@ services:
       dockerfile: Dockerfile
     container_name: nextjs_app
     restart: unless-stopped
+    env_file: .env
     ports:
       - "3000:3000"
     environment:

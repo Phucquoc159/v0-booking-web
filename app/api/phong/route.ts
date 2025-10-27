@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of Phong
 export async function GET(request: NextRequest) {
   try {
-    const phongs = await prisma.Phong.findMany()
+    const phongs = await prisma.phong.findMany()
 
     return NextResponse.json({
       success: true,
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const newPhong = await prisma.Phong.create({
+    const newPhong = await prisma.phong.create({
       data: body,
     })
 

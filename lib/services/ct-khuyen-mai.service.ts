@@ -2,7 +2,7 @@
 // do not modify it directly
 import { CtKhuyenMai } from '@/lib/generated/prisma'
 
-const API_URL = '/api/ct-khuyen-mai'
+const API_URL = 'http://localhost:3000/api/ct-khuyen-mai'
 
 export interface ApiResponse<T> {
   success: boolean

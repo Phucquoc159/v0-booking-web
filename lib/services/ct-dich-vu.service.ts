@@ -2,7 +2,7 @@
 // do not modify it directly
 import { CtDichVu } from '@/lib/generated/prisma'
 
-const API_URL = '/api/ct-dich-vu'
+const API_URL = 'http://localhost:3000/api/ct-dich-vu'
 
 export interface ApiResponse<T> {
   success: boolean

@@ -2,7 +2,7 @@
 // do not modify it directly
 import { HoaDon } from '@/lib/generated/prisma'
 
-const API_URL = '/api/hoa-don'
+const API_URL = 'http://localhost:3000/api/hoa-don'
 
 export interface ApiResponse<T> {
   success: boolean
@@ -27,7 +27,7 @@ export async function getListHoaDon(): Promise<ApiResponse<HoaDon[]>> {
 // Get HoaDon by idHd
 export async function getHoaDon(id: string): Promise<ApiResponse<HoaDon>> {
   try {
-    const response = await fetch(`/api/hoa-don/${id}`)
+    const response = await fetch(`http://localhost:3000/api/hoa-don/${id}`)
     return await response.json()
   } catch (error) {
     return {
@@ -42,7 +42,7 @@ export async function updateHoaDon(
   data: Partial<Omit<HoaDon, 'idHd'>>
 ): Promise<ApiResponse<HoaDon>> {
   try {
-    const response = await fetch(`/api/hoa-don/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/hoa-don/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export async function updateHoaDon(
 // Delete HoaDon
 export async function deleteHoaDon(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`/api/hoa-don/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/hoa-don/${id}`, {
       method: 'DELETE',
     })
     return await response.json()
