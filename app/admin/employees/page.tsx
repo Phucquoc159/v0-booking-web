@@ -7,51 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Edit, Trash2, Shield } from "lucide-react"
-import { getListNhanVien } from "@/lib/services"
-import { useQuery } from "@tanstack/react-query";
-
-const employees = [
-  {
-    id: "EMP001",
-    name: "Nguyễn Văn Admin",
-    email: "admin@qkhotel.com",
-    phone: "0901111111",
-    department: "admin",
-    role: "Quản Trị Viên",
-    status: "active",
-    joinDate: "2020-01-01",
-  },
-  {
-    id: "EMP002",
-    name: "Trần Thị Lễ Tân",
-    email: "letan@qkhotel.com",
-    phone: "0902222222",
-    department: "reception",
-    role: "Nhân Viên Lễ Tân",
-    status: "active",
-    joinDate: "2021-03-15",
-  },
-  {
-    id: "EMP003",
-    name: "Lê Văn Buồng",
-    email: "buong@qkhotel.com",
-    phone: "0903333333",
-    department: "housekeeping",
-    role: "Nhân Viên Buồng",
-    status: "active",
-    joinDate: "2021-06-20",
-  },
-  {
-    id: "EMP004",
-    name: "Phạm Thị Bếp",
-    email: "bep@qkhotel.com",
-    phone: "0904444444",
-    department: "restaurant",
-    role: "Nhân Viên Nhà Hàng",
-    status: "active",
-    joinDate: "2022-01-10",
-  },
-]
+import { getListNhanVien, createNhanVien, deleteNhanVien } from "@/lib/services/nhan-vien.service";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react"
 
 const departmentConfig = {
   admin: { label: "Quản Trị", color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
@@ -66,20 +24,95 @@ const statusConfig = {
 }
 
 export default function EmployeesPage() {
-const {
-    data: employees,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const [formData, setFormData] = useState({
+    ho: '',
+    ten: '',
+    email: '',
+    diaChi: '',
+    ngaySinh: null,
+    sdt: '',
+    idBp: '',
+    password: '',
+    username: '',
+    phai: '',
+    idNq: 'nq1',
+  })
+
+  const queryClient = useQueryClient();
+
+  const { data: employees, isLoading, isError, error } = useQuery({
     queryKey: ["employees"],
-    queryFn: getListNhanVien
+    queryFn: getListNhanVien,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteNhanVien,
+    onSuccess: () => {
+      alert('Xóa nhân viên thành công!');
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+    onError: (error) => {
+      alert(`Xóa thất bại: ${error.message}`);
+    }
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createNhanVien,
+    onSuccess: () => {
+      alert('Thêm nhân viên thành công!');
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      // Reset form
+      setFormData({
+        ho: '',
+        ten: '',
+        email: '',
+        sdt: '',
+        idBp: '1',
+        password: '',
+        username: '',
+        phai: 'Nam',
+        idNq: 'NQ1',
+        diaChi: '',
+        ngaySinh: null,
+      });
+    },
+    onError: (error: any) => {
+      alert(`Thêm thất bại: ${error.response?.data?.message || error.message}`);
+    }
   });
 
   if (isLoading) return <p>Đang tải dữ liệu...</p>;
   if (isError) return <p>Lỗi: {(error as Error).message}</p>;
 
-  console.log("[DEBUG]:", employees)
+  const createEmployee = () => {
+    const idNv = "NV" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    createMutation.mutate({ ...formData, idNv, idBp: '1', idNq: 'NQ1' }); // Cung cấp giá trị mặc định nếu cần
+  };
+
+  const handleFullNameChange = (value: string) => {
+    const parts = value.trim().split(' ')
+    const ten = parts.pop() || ''
+    const ho = parts.join(' ')
+
+    setFormData(prev => ({
+      ...prev,
+      ho,
+      ten
+    }))
+  }
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleDeleteEmployee = (idNv: string) => {
+    if (confirm('Bạn có chắc chắn muốn xóa nhân viên này không?')) {
+      deleteMutation.mutate(idNv);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -103,19 +136,34 @@ const {
             <div className="space-y-4">
               <div>
                 <Label>Họ Tên</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="Nguyễn Văn A" />
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="Nguyễn Văn A"
+                  onChange={(e) => handleFullNameChange(e.target.value)}
+                  value={formData.ho + ' ' + formData.ten}
+                  />
               </div>
               <div>
                 <Label>Email</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="email@qkhotel.com" />
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="email@qkhotel.com"
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  value={formData.email}
+                  />
               </div>
               <div>
                 <Label>Số Điện Thoại</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="0901234567" />
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="0901234567"
+                  onChange={(e) => handleChange('sdt', e.target.value)}
+                  value={formData.sdt}
+                  />
               </div>
               <div>
                 <Label>Bộ Phận</Label>
-                <Select>
+                <Select value={formData.idBp} onValueChange={(value) => handleChange('idBp', value)}>
                   <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
                     <SelectValue placeholder="Chọn bộ phận" />
                   </SelectTrigger>
@@ -129,9 +177,17 @@ const {
               </div>
               <div>
                 <Label>Mật Khẩu</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="password" placeholder="••••••••" />
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  type="password"
+                  placeholder="••••••••"
+                  onChange={(e) => handleChange('password', e.target.value)}
+                  value={formData.password}
+                  />
               </div>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">Thêm Nhân Viên</Button>
+              <Button onClick={createEmployee} disabled={createMutation.isPending} className="w-full bg-blue-600 hover:bg-blue-700">
+                {createMutation.isPending ? 'Đang thêm...' : 'Thêm Nhân Viên'}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -205,7 +261,7 @@ const {
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-500">
+                      <Button onClick={() => handleDeleteEmployee(employee.idNv)} size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-500" disabled={deleteMutation.isPending}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

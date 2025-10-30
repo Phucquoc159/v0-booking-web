@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,55 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getListKhachHang, createKhachHang } from "@/lib/services/khach-hang.service"
+import { KhachHang } from "@/lib/generated/prisma"
 import { Search, Plus, Eye, LogIn, LogOut } from "lucide-react"
 
-const customers = [
-  {
-    id: "CUS001",
-    name: "Nguyễn Văn A",
-    gender: "Nam",
-    phone: "0901234567",
-    email: "nguyenvana@email.com",
-    address: "123 Đường ABC, Q1, TP.HCM",
-    idCard: "001234567890",
-    room: "101",
-    checkIn: "2025-01-15",
-    checkOut: "2025-01-18",
-    status: "checked-in",
-    totalSpent: 5600000,
-    visits: 3,
-  },
-  {
-    id: "CUS002",
-    name: "Trần Thị B",
-    gender: "Nữ",
-    phone: "0912345678",
-    email: "tranthib@email.com",
-    address: "456 Đường XYZ, Q3, TP.HCM",
-    idCard: "001234567891",
-    room: "201",
-    checkIn: "2025-01-16",
-    checkOut: "2025-01-20",
-    status: "checked-in",
-    totalSpent: 12400000,
-    visits: 5,
-  },
-  {
-    id: "CUS003",
-    name: "Lê Minh C",
-    gender: "Nam",
-    phone: "0923456789",
-    email: "leminhc@email.com",
-    address: "789 Đường DEF, Q5, TP.HCM",
-    idCard: "001234567892",
-    room: null,
-    checkIn: null,
-    checkOut: null,
-    status: "guest",
-    totalSpent: 8200000,
-    visits: 2,
-  },
-]
 
 const statusConfig = {
   "checked-in": { label: "Đang Lưu Trú", color: "bg-green-500/10 text-green-500 border-green-500/20" },
@@ -65,7 +20,62 @@ const statusConfig = {
 }
 
 export default function CustomersPage() {
-  const [activeTab, setActiveTab] = useState("check-in")
+  const [customers, setCustomers] = useState<KhachHang[]>([])
+    const [activeTab, setActiveTab] = useState("check-in")
+  const [isDialogOpen, setDialogOpen] = useState(false)
+  const [newCustomer, setNewCustomer] = useState({
+    ho: "",
+    ten: "",
+    sdt: "",
+    email: "",
+    diaChi: "",
+    gioiTinh: "Nam",
+  })
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      const response = await getListKhachHang()
+      if (response.success && response.data) {
+        setCustomers(response.data)
+      } else {
+        console.error(response.error)
+      }
+    }
+
+    fetchCustomers()
+  }, [])
+
+  const handleCreateCustomer = async () => {
+    const response = await createKhachHang({
+      ho: newCustomer.ho,
+      ten: newCustomer.ten,
+      sdt: newCustomer.sdt,
+      email: newCustomer.email,
+      diaChi: newCustomer.diaChi,
+      maSoThue: null,
+      matKhau: null,
+    })
+    if (response.success && response.data) {
+      setCustomers([response.data, ...customers])
+      setDialogOpen(false)
+      setNewCustomer({
+        ho: "",
+        ten: "",
+        sdt: "",
+        email: "",
+        diaChi: "",
+        gioiTinh: "Nam",
+      })
+    } else {
+      console.error(response.error)
+      alert(`Lỗi: ${response.message}`)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setNewCustomer((prev) => ({ ...prev, [name]: value }))
+  }
 
   return (
     <div className="space-y-6">
@@ -200,7 +210,8 @@ export default function CustomersPage() {
             <Card className="bg-[#1a1a1a] border-[#2a2a2a] p-6">
               <h2 className="text-xl font-semibold text-white mb-4">Đặt Phòng Hôm Nay</h2>
               <div className="space-y-3">
-                {customers
+                {/* TODO: Replace with actual check-in data */}
+                {/* {customers
                   .filter((c) => c.status === "checked-in")
                   .map((customer) => (
                     <div key={customer.id} className="p-3 bg-[#0a0a0a] rounded-lg border border-[#2a2a2a]">
@@ -208,7 +219,7 @@ export default function CustomersPage() {
                       <p className="text-sm text-gray-400">Phòng {customer.room}</p>
                       <p className="text-sm text-gray-400">{customer.phone}</p>
                     </div>
-                  ))}
+                  ))} */}
               </div>
             </Card>
           </div>
@@ -292,7 +303,8 @@ export default function CustomersPage() {
             <Card className="bg-[#1a1a1a] border-[#2a2a2a] p-6">
               <h2 className="text-xl font-semibold text-white mb-4">Trả Phòng Hôm Nay</h2>
               <div className="space-y-3">
-                {customers
+                {/* TODO: Replace with actual check-out data */}
+                {/* {customers
                   .filter((c) => c.status === "checked-in")
                   .slice(0, 2)
                   .map((customer) => (
@@ -301,7 +313,7 @@ export default function CustomersPage() {
                       <p className="text-sm text-gray-400">Phòng {customer.room}</p>
                       <p className="text-sm text-yellow-500">Trả phòng: {customer.checkOut}</p>
                     </div>
-                  ))}
+                  ))} */}
               </div>
             </Card>
           </div>
@@ -320,7 +332,7 @@ export default function CustomersPage() {
                   />
                 </div>
               </div>
-              <Dialog>
+              <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                     <Plus className="h-4 w-4 mr-2" />
@@ -332,19 +344,29 @@ export default function CustomersPage() {
                     <DialogTitle>Thêm Khách Hàng Mới</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div>
-                      <Label>Họ Tên</Label>
-                      <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Họ</Label>
+                        <Input name="ho" value={newCustomer.ho} onChange={handleInputChange} className="bg-[#0a0a0a] border-[#2a2a2a] text-white" />
+                      </div>
+                      <div>
+                        <Label>Tên</Label>
+                        <Input name="ten" value={newCustomer.ten} onChange={handleInputChange} className="bg-[#0a0a0a] border-[#2a2a2a] text-white" />
+                      </div>
                     </div>
                     <div>
                       <Label>Số Điện Thoại</Label>
-                      <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" />
+                      <Input name="sdt" value={newCustomer.sdt} onChange={handleInputChange} className="bg-[#0a0a0a] border-[#2a2a2a] text-white" />
                     </div>
                     <div>
                       <Label>Email</Label>
-                      <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" />
+                      <Input name="email" value={newCustomer.email} onChange={handleInputChange} type="email" className="bg-[#0a0a0a] border-[#2a2a2a] text-white" />
                     </div>
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700">Thêm</Button>
+                    <div>
+                      <Label>Địa chỉ</Label>
+                      <Input name="diaChi" value={newCustomer.diaChi} onChange={handleInputChange} className="bg-[#0a0a0a] border-[#2a2a2a] text-white" />
+                    </div>
+                    <Button onClick={handleCreateCustomer} className="w-full bg-blue-600 hover:bg-blue-700">Thêm</Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -368,28 +390,32 @@ export default function CustomersPage() {
                 </thead>
                 <tbody>
                   {customers.map((customer) => (
-                    <tr key={customer.id} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
-                      <td className="p-4 text-white font-semibold">{customer.id}</td>
+                    <tr key={customer.cccd} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
+                      <td className="p-4 text-white font-semibold">{customer.cccd}</td>
                       <td className="p-4">
                         <div>
-                          <p className="text-white font-medium">{customer.name}</p>
-                          <p className="text-sm text-gray-400">{customer.gender}</p>
+                          <p className="text-white font-medium">{customer.ho + ' ' + customer.ten}</p>
+                          <p className="text-sm text-gray-400">{customer.diaChi}</p>
                         </div>
                       </td>
                       <td className="p-4">
                         <div>
-                          <p className="text-white text-sm">{customer.phone}</p>
+                          <p className="text-white text-sm">{customer.sdt}</p>
                           <p className="text-gray-400 text-sm">{customer.email}</p>
                         </div>
                       </td>
-                      <td className="p-4 text-gray-400">{customer.room || "-"}</td>
+                      {/* TODO: Get room info */}
+                      <td className="p-4 text-gray-400">{"-"}</td>
                       <td className="p-4">
-                        <Badge className={statusConfig[customer.status as keyof typeof statusConfig].color}>
-                          {statusConfig[customer.status as keyof typeof statusConfig].label}
+                        {/* TODO: Get customer status */}
+                        <Badge className={statusConfig["guest"].color}>
+                          {statusConfig["guest"].label}
                         </Badge>
                       </td>
-                      <td className="p-4 text-white">{customer.totalSpent.toLocaleString()}₫</td>
-                      <td className="p-4 text-gray-400">{customer.visits} lần</td>
+                      {/* TODO: Get total spent */}
+                      <td className="p-4 text-white">{0}₫</td>
+                      {/* TODO: Get visits */}
+                      <td className="p-4 text-gray-400">{0} lần</td>
                       <td className="p-4">
                         <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
                           <Eye className="h-4 w-4" />
