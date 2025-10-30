@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
 
     const hangPhong = await prisma.hangPhong.findUnique({
-      where: { id },
+      where: { idHangPhong: id },
     })
 
     if (!hangPhong) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
 
     const updatedHangPhong = await prisma.hangPhong.update({
-      where: { id },
+      where: { idHangPhong: id },
       data: body,
     })
 
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
 
     await prisma.hangPhong.delete({
-      where: { id },
+      where: { idHangPhong: id },
     })
 
     return NextResponse.json({

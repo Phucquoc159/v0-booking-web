@@ -12,7 +12,7 @@ export async function GET(
     const { cccd } = params
 
     const khachHang = await prisma.khachHang.findUnique({
-      where: { cccd },
+      where: { cccd: cccd },
     })
 
     if (!khachHang) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
 
     const updatedKhachHang = await prisma.khachHang.update({
-      where: { cccd },
+      where: { cccd: cccd },
       data: body,
     })
 
@@ -71,7 +71,7 @@ export async function DELETE(
     const { cccd } = params
 
     await prisma.khachHang.delete({
-      where: { cccd },
+      where: { cccd: cccd },
     })
 
     return NextResponse.json({

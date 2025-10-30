@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
 
     const tienNghi = await prisma.tienNghi.findUnique({
-      where: { id },
+      where: { idTn: id },
     })
 
     if (!tienNghi) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
 
     const updatedTienNghi = await prisma.tienNghi.update({
-      where: { id },
+      where: { idTn: id },
       data: body,
     })
 
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
 
     await prisma.tienNghi.delete({
-      where: { id },
+      where: { idTn: id },
     })
 
     return NextResponse.json({

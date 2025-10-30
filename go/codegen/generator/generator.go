@@ -223,7 +223,7 @@ export async function GET(
     const { %s } = params
 
     const %s = await prisma.%s.findUnique({
-      where: { %s },
+      where: { %s: %s },
     })
 
     if (!%s) {
@@ -256,7 +256,7 @@ export async function PUT(
     const body = await request.json()
 
     const updated%s = await prisma.%s.update({
-      where: { %s },
+      where: { %s: %s },
       data: body,
     })
 
@@ -282,7 +282,7 @@ export async function DELETE(
     const { %s } = params
 
     await prisma.%s.delete({
-      where: { %s },
+      where: { %s: %s },
     })
 
     return NextResponse.json({
@@ -297,11 +297,11 @@ export async function DELETE(
     )
   }
 }
-`, config.Model, pkField, paramName, paramName, modelCamel, modelCamel, paramName,
+`, config.Model, pkField, paramName, paramName, modelCamel, modelCamel, pkField, paramName,
 		modelCamel, modelCamel, modelCamel,
-		config.Model, pkField, paramName, paramName, string(config.Model), modelCamel, paramName,
+		config.Model, pkField, paramName, paramName, string(config.Model), modelCamel, pkField, paramName,
 		string(config.Model), config.Model,
-		config.Model, pkField, paramName, paramName, modelCamel, paramName, modelCamel))
+		config.Model, pkField, paramName, paramName, modelCamel, pkField, paramName, modelCamel))
 
 	filename := filepath.Join(dir, "route.ts")
 	return os.WriteFile(filename, []byte(g.sb.String()), 0644)

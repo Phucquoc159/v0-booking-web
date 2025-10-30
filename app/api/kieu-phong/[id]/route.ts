@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
 
     const kieuPhong = await prisma.kieuPhong.findUnique({
-      where: { id },
+      where: { idKp: id },
     })
 
     if (!kieuPhong) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
 
     const updatedKieuPhong = await prisma.kieuPhong.update({
-      where: { id },
+      where: { idKp: id },
       data: body,
     })
 
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
 
     await prisma.kieuPhong.delete({
-      where: { id },
+      where: { idKp: id },
     })
 
     return NextResponse.json({

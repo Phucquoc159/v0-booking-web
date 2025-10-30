@@ -12,7 +12,7 @@ export async function GET(
     const { id } = params
 
     const trangThai = await prisma.trangThai.findUnique({
-      where: { id },
+      where: { idTt: id },
     })
 
     if (!trangThai) {
@@ -45,7 +45,7 @@ export async function PUT(
     const body = await request.json()
 
     const updatedTrangThai = await prisma.trangThai.update({
-      where: { id },
+      where: { idTt: id },
       data: body,
     })
 
@@ -71,7 +71,7 @@ export async function DELETE(
     const { id } = params
 
     await prisma.trangThai.delete({
-      where: { id },
+      where: { idTt: id },
     })
 
     return NextResponse.json({
