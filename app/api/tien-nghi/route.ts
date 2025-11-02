@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of TienNghi
 export async function GET(request: NextRequest) {
   try {
-    const tienNghis = await prisma.tienNghi.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idTn: { in: idsParam.split(',') } }
+      : {}
+
+    const tienNghis = await prisma.tienNghi.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

@@ -24,6 +24,19 @@ export async function getListKhuyenMai(): Promise<ApiResponse<KhuyenMai[]>> {
   }
 }
 
+// Get list of KhuyenMai by ids
+export async function getListKhuyenMaiByIds(ids: string[]): Promise<ApiResponse<KhuyenMai[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get KhuyenMai by idKm
 export async function getKhuyenMai(id: string): Promise<ApiResponse<KhuyenMai>> {
   try {

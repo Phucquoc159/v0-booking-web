@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of NhanVien
 export async function GET(request: NextRequest) {
   try {
-    const nhanViens = await prisma.nhanVien.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idNv: { in: idsParam.split(',') } }
+      : {}
+
+    const nhanViens = await prisma.nhanVien.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 type Model string
@@ -23,22 +24,22 @@ const (
 	TrangThai    Model = "TrangThai"
 	Phong        Model = "Phong"
 	TienNghi     Model = "TienNghi"
-	CTTienNghi   Model = "CtTienNghi"
+	CTTienNghi   Model = "CTTienNghi"
 	KhuyenMai    Model = "KhuyenMai"
-	CTKhuyenMai  Model = "CtKhuyenMai"
+	CTKhuyenMai  Model = "CTKhuyenMai"
 	PhieuDat     Model = "PhieuDat"
-	CTPhieuDat   Model = "CtPhieuDat"
+	CTPhieuDat   Model = "CTPhieuDat"
 	PhieuThue    Model = "PhieuThue"
-	CTPhieuThue  Model = "CtPhieuThue"
+	CTPhieuThue  Model = "CTPhieuThue"
 	HoaDon       Model = "HoaDon"
-	CTKhachO     Model = "CtKhachO"
+	CTKhachO     Model = "CTKhachO"
 	DoiPhong     Model = "DoiPhong"
 	DichVu       Model = "DichVu"
 	GiaDichVu    Model = "GiaDichVu"
-	CTDichVu     Model = "CtDichVu"
+	CTDichVu     Model = "CTDichVu"
 	PhuThu       Model = "PhuThu"
 	GiaPhuThu    Model = "GiaPhuThu"
-	CTPhuThu     Model = "CtPhuThu"
+	CTPhuThu     Model = "CTPhuThu"
 )
 
 type ModelConfig struct {
@@ -159,7 +160,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of %s
 export async function GET(request: NextRequest) {
   try {
-    const %ss = await prisma.%s.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { id%s: { in: idsParam.split(',') } }
+      : {}
+
+    const %ss = await prisma.%s.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,
@@ -195,7 +203,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-`, config.Model, modelCamel, modelCamel, modelCamel, modelCamel, config.Model,
+`, config.Model, toAbbreviation(string(config.Model)), modelCamel, modelCamel, modelCamel, modelCamel, config.Model,
 		config.Model, modelCamel, string(config.Model), string(config.Model)))
 
 	filename := filepath.Join(dir, "route.ts")
@@ -330,7 +338,7 @@ func toPrismaCamelCase(s string) string {
 	// Handle special cases like CT prefix
 	if strings.HasPrefix(s, "CT") && len(s) > 2 {
 		// CTKhachO -> ctKhachO
-		return "ct" + s[2:]
+		return "cT" + s[2:]
 	}
 
 	// Regular camelCase: KhachHang -> khachHang
@@ -391,6 +399,22 @@ export interface ApiResponse<T> {
 export async function getList%s(): Promise<ApiResponse<%s[]>> {
   try {
     const response = await fetch(API_URL)
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+`, typeName, typeName, typeName))
+
+	// Get list by ids
+	g.sb.WriteString(fmt.Sprintf(`// Get list of %s by ids
+export async function getList%sByIds(ids: string[]): Promise<ApiResponse<%s[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
     return await response.json()
   } catch (error) {
     return {
@@ -530,4 +554,27 @@ func getOmitFields(config ModelConfig) string {
 	}
 
 	return "'id'"
+}
+
+func toAbbreviation(str string) string {
+	str = strings.Replace(str, "CT", "", 1)
+
+	var capitals []rune
+
+	for _, char := range str {
+		if unicode.IsUpper(char) {
+			capitals = append(capitals, char)
+		}
+	}
+
+	if len(capitals) == 0 {
+		return strings.ToLower(str)
+	}
+
+	result := string(capitals[0])
+	for i := 1; i < len(capitals); i++ {
+		result += string(unicode.ToLower(capitals[i]))
+	}
+
+	return result
 }

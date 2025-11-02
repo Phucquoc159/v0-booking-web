@@ -24,6 +24,19 @@ export async function getListDoiPhong(): Promise<ApiResponse<DoiPhong[]>> {
   }
 }
 
+// Get list of DoiPhong by ids
+export async function getListDoiPhongByIds(ids: string[]): Promise<ApiResponse<DoiPhong[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Create new DoiPhong
 export async function createDoiPhong(
   data: Omit<DoiPhong, 'idCtPt' | 'soPhongMoi'>

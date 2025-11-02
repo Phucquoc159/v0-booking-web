@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of QuanLy
 export async function GET(request: NextRequest) {
   try {
-    const quanLys = await prisma.quanLy.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idQl: { in: idsParam.split(',') } }
+      : {}
+
+    const quanLys = await prisma.quanLy.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

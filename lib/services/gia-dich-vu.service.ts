@@ -24,6 +24,19 @@ export async function getListGiaDichVu(): Promise<ApiResponse<GiaDichVu[]>> {
   }
 }
 
+// Get list of GiaDichVu by ids
+export async function getListGiaDichVuByIds(ids: string[]): Promise<ApiResponse<GiaDichVu[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Create new GiaDichVu
 export async function createGiaDichVu(
   data: Omit<GiaDichVu, 'idDv' | 'ngayApDung'>

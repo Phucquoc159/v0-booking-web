@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of DichVu
 export async function GET(request: NextRequest) {
   try {
-    const dichVus = await prisma.dichVu.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idDv: { in: idsParam.split(',') } }
+      : {}
+
+    const dichVus = await prisma.dichVu.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

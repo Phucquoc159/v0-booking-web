@@ -24,6 +24,19 @@ export async function getListNhanVien(): Promise<ApiResponse<NhanVien[]>> {
   }
 }
 
+// Get list of NhanVien by ids
+export async function getListNhanVienByIds(ids: string[]): Promise<ApiResponse<NhanVien[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get NhanVien by idNv
 export async function getNhanVien(id: string): Promise<ApiResponse<NhanVien>> {
   try {

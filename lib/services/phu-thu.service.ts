@@ -24,6 +24,19 @@ export async function getListPhuThu(): Promise<ApiResponse<PhuThu[]>> {
   }
 }
 
+// Get list of PhuThu by ids
+export async function getListPhuThuByIds(ids: string[]): Promise<ApiResponse<PhuThu[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get PhuThu by idPhuThu
 export async function getPhuThu(id: string): Promise<ApiResponse<PhuThu>> {
   try {

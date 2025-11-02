@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of GiaPhuThu
 export async function GET(request: NextRequest) {
   try {
-    const giaPhuThus = await prisma.giaPhuThu.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idGpt: { in: idsParam.split(',') } }
+      : {}
+
+    const giaPhuThus = await prisma.giaPhuThu.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

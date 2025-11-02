@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of KhachHang
 export async function GET(request: NextRequest) {
   try {
-    const khachHangs = await prisma.khachHang.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idKh: { in: idsParam.split(',') } }
+      : {}
+
+    const khachHangs = await prisma.khachHang.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

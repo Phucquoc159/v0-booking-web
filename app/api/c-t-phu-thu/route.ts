@@ -3,17 +3,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Get list of CtKhuyenMai
+// GET - Get list of CTPhuThu
 export async function GET(request: NextRequest) {
   try {
-    const ctKhuyenMais = await prisma.ctKhuyenMai.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idPt: { in: idsParam.split(',') } }
+      : {}
+
+    const cTPhuThus = await prisma.cTPhuThu.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,
-      data: ctKhuyenMais,
+      data: cTPhuThus,
     })
   } catch (error) {
-    console.error('Error fetching ctKhuyenMai:', error)
+    console.error('Error fetching cTPhuThu:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -21,21 +28,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new CtKhuyenMai
+// POST - Create new CTPhuThu
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const newCtKhuyenMai = await prisma.ctKhuyenMai.create({
+    const newCTPhuThu = await prisma.cTPhuThu.create({
       data: body,
     })
 
     return NextResponse.json(
-      { success: true, data: newCtKhuyenMai },
+      { success: true, data: newCTPhuThu },
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error creating CtKhuyenMai:', error)
+    console.error('Error creating CTPhuThu:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

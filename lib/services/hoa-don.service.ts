@@ -24,6 +24,19 @@ export async function getListHoaDon(): Promise<ApiResponse<HoaDon[]>> {
   }
 }
 
+// Get list of HoaDon by ids
+export async function getListHoaDonByIds(ids: string[]): Promise<ApiResponse<HoaDon[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get HoaDon by idHd
 export async function getHoaDon(id: string): Promise<ApiResponse<HoaDon>> {
   try {

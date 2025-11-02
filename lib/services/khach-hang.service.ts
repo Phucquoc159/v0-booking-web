@@ -24,6 +24,19 @@ export async function getListKhachHang(): Promise<ApiResponse<KhachHang[]>> {
   }
 }
 
+// Get list of KhachHang by ids
+export async function getListKhachHangByIds(ids: string[]): Promise<ApiResponse<KhachHang[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get KhachHang by cccd
 export async function getKhachHang(cccd: string): Promise<ApiResponse<KhachHang>> {
   try {

@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of HangPhong
 export async function GET(request: NextRequest) {
   try {
-    const hangPhongs = await prisma.hangPhong.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idHp: { in: idsParam.split(',') } }
+      : {}
+
+    const hangPhongs = await prisma.hangPhong.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of GiaDichVu
 export async function GET(request: NextRequest) {
   try {
-    const giaDichVus = await prisma.giaDichVu.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idGdv: { in: idsParam.split(',') } }
+      : {}
+
+    const giaDichVus = await prisma.giaDichVu.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

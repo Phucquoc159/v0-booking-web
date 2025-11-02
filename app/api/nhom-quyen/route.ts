@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of NhomQuyen
 export async function GET(request: NextRequest) {
   try {
-    const nhomQuyens = await prisma.nhomQuyen.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idNq: { in: idsParam.split(',') } }
+      : {}
+
+    const nhomQuyens = await prisma.nhomQuyen.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

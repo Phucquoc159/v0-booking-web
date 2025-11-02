@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of LoaiPhong
 export async function GET(request: NextRequest) {
   try {
-    const loaiPhongs = await prisma.loaiPhong.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idLp: { in: idsParam.split(',') } }
+      : {}
+
+    const loaiPhongs = await prisma.loaiPhong.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

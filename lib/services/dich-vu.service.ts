@@ -24,6 +24,19 @@ export async function getListDichVu(): Promise<ApiResponse<DichVu[]>> {
   }
 }
 
+// Get list of DichVu by ids
+export async function getListDichVuByIds(ids: string[]): Promise<ApiResponse<DichVu[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get DichVu by idDv
 export async function getDichVu(id: string): Promise<ApiResponse<DichVu>> {
   try {

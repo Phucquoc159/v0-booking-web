@@ -24,6 +24,19 @@ export async function getListTrangThai(): Promise<ApiResponse<TrangThai[]>> {
   }
 }
 
+// Get list of TrangThai by ids
+export async function getListTrangThaiByIds(ids: string[]): Promise<ApiResponse<TrangThai[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get TrangThai by idTt
 export async function getTrangThai(id: string): Promise<ApiResponse<TrangThai>> {
   try {

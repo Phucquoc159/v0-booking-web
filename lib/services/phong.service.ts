@@ -24,6 +24,19 @@ export async function getListPhong(): Promise<ApiResponse<Phong[]>> {
   }
 }
 
+// Get list of Phong by ids
+export async function getListPhongByIds(ids: string[]): Promise<ApiResponse<Phong[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get Phong by soPhong
 export async function getPhong(soPhong: string): Promise<ApiResponse<Phong>> {
   try {

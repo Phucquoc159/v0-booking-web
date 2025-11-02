@@ -24,6 +24,19 @@ export async function getListTienNghi(): Promise<ApiResponse<TienNghi[]>> {
   }
 }
 
+// Get list of TienNghi by ids
+export async function getListTienNghiByIds(ids: string[]): Promise<ApiResponse<TienNghi[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get TienNghi by idTn
 export async function getTienNghi(id: string): Promise<ApiResponse<TienNghi>> {
   try {

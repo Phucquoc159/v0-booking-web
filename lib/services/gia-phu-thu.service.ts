@@ -24,6 +24,19 @@ export async function getListGiaPhuThu(): Promise<ApiResponse<GiaPhuThu[]>> {
   }
 }
 
+// Get list of GiaPhuThu by ids
+export async function getListGiaPhuThuByIds(ids: string[]): Promise<ApiResponse<GiaPhuThu[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Create new GiaPhuThu
 export async function createGiaPhuThu(
   data: Omit<GiaPhuThu, 'idPhuThu' | 'ngayApDung'>

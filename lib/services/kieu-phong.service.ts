@@ -24,6 +24,19 @@ export async function getListKieuPhong(): Promise<ApiResponse<KieuPhong[]>> {
   }
 }
 
+// Get list of KieuPhong by ids
+export async function getListKieuPhongByIds(ids: string[]): Promise<ApiResponse<KieuPhong[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get KieuPhong by idKp
 export async function getKieuPhong(id: string): Promise<ApiResponse<KieuPhong>> {
   try {

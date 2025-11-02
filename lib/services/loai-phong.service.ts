@@ -24,6 +24,19 @@ export async function getListLoaiPhong(): Promise<ApiResponse<LoaiPhong[]>> {
   }
 }
 
+// Get list of LoaiPhong by ids
+export async function getListLoaiPhongByIds(ids: string[]): Promise<ApiResponse<LoaiPhong[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get LoaiPhong by idLp
 export async function getLoaiPhong(id: string): Promise<ApiResponse<LoaiPhong>> {
   try {

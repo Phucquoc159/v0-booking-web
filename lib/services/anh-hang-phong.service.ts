@@ -24,6 +24,19 @@ export async function getListAnhHangPhong(): Promise<ApiResponse<AnhHangPhong[]>
   }
 }
 
+// Get list of AnhHangPhong by ids
+export async function getListAnhHangPhongByIds(ids: string[]): Promise<ApiResponse<AnhHangPhong[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get AnhHangPhong by idAnhHangPhong
 export async function getAnhHangPhong(id: string): Promise<ApiResponse<AnhHangPhong>> {
   try {

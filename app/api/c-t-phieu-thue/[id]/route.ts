@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Get single CtPhieuThue by idCtPt
+// GET - Get single CTPhieuThue by idCtPt
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -11,11 +11,11 @@ export async function GET(
   try {
     const { id } = params
 
-    const ctPhieuThue = await prisma.ctPhieuThue.findUnique({
+    const cTPhieuThue = await prisma.cTPhieuThue.findUnique({
       where: { idCtPt: id },
     })
 
-    if (!ctPhieuThue) {
+    if (!cTPhieuThue) {
       return NextResponse.json(
         { success: false, message: 'Not found' },
         { status: 404 }
@@ -24,10 +24,10 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: ctPhieuThue,
+      data: cTPhieuThue,
     })
   } catch (error) {
-    console.error('Error fetching ctPhieuThue:', error)
+    console.error('Error fetching cTPhieuThue:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -35,7 +35,7 @@ export async function GET(
   }
 }
 
-// PUT - Update CtPhieuThue by idCtPt
+// PUT - Update CTPhieuThue by idCtPt
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -44,17 +44,17 @@ export async function PUT(
     const { id } = params
     const body = await request.json()
 
-    const updatedCtPhieuThue = await prisma.ctPhieuThue.update({
+    const updatedCTPhieuThue = await prisma.cTPhieuThue.update({
       where: { idCtPt: id },
       data: body,
     })
 
     return NextResponse.json({
       success: true,
-      data: updatedCtPhieuThue,
+      data: updatedCTPhieuThue,
     })
   } catch (error) {
-    console.error('Error updating CtPhieuThue:', error)
+    console.error('Error updating CTPhieuThue:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -62,7 +62,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete CtPhieuThue by idCtPt
+// DELETE - Delete CTPhieuThue by idCtPt
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -70,7 +70,7 @@ export async function DELETE(
   try {
     const { id } = params
 
-    await prisma.ctPhieuThue.delete({
+    await prisma.cTPhieuThue.delete({
       where: { idCtPt: id },
     })
 
@@ -79,7 +79,7 @@ export async function DELETE(
       message: 'Deleted successfully',
     })
   } catch (error) {
-    console.error('Error deleting ctPhieuThue:', error)
+    console.error('Error deleting cTPhieuThue:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

@@ -24,6 +24,19 @@ export async function getListPhieuDat(): Promise<ApiResponse<PhieuDat[]>> {
   }
 }
 
+// Get list of PhieuDat by ids
+export async function getListPhieuDatByIds(ids: string[]): Promise<ApiResponse<PhieuDat[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get PhieuDat by idPd
 export async function getPhieuDat(id: string): Promise<ApiResponse<PhieuDat>> {
   try {

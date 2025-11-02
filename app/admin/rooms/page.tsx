@@ -17,29 +17,10 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Search, Plus, Edit, Trash2, Grid3x3, List } from "lucide-react"
+import { getListHangPhongByIds, getListLoaiPhongByIds, getListPhong, getListTrangThai, getListTrangThaiByIds, getTrangThai } from "@/lib/services"
+import { useQuery } from "@tanstack/react-query"
 
 // Mock data
-const rooms = [
-  { id: "101", floor: 1, type: "Standard", status: "available", price: 1200000 },
-  { id: "102", floor: 1, type: "Standard", status: "occupied", price: 1200000 },
-  { id: "103", floor: 1, type: "Deluxe", status: "dirty", price: 1500000 },
-  { id: "104", floor: 1, type: "Deluxe", status: "available", price: 1500000 },
-  { id: "201", floor: 2, type: "Suite", status: "reserved", price: 2800000 },
-  { id: "202", floor: 2, type: "Suite", status: "occupied", price: 2800000 },
-  { id: "203", floor: 2, type: "Executive", status: "available", price: 2200000 },
-  { id: "204", floor: 2, type: "Executive", status: "maintenance", price: 2200000 },
-  { id: "301", floor: 3, type: "VIP", status: "available", price: 3500000 },
-  { id: "302", floor: 3, type: "VIP", status: "occupied", price: 3500000 },
-]
-
-const roomTypes = [
-  { id: 1, name: "Standard", beds: "1 King", capacity: 2, price: 1200000 },
-  { id: 2, name: "Deluxe", beds: "1 King", capacity: 2, price: 1500000 },
-  { id: 3, name: "Suite", beds: "1 King + 1 Sofa", capacity: 4, price: 2800000 },
-  { id: 4, name: "Executive", beds: "1 King", capacity: 2, price: 2200000 },
-  { id: 5, name: "VIP", beds: "2 King", capacity: 4, price: 3500000 },
-]
-
 const statusConfig = {
   available: { label: "Trống", color: "bg-green-500/10 text-green-500 border-green-500/20" },
   occupied: { label: "Đã Đặt", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
@@ -53,9 +34,38 @@ export default function RoomsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterFloor, setFilterFloor] = useState<string>("all")
 
-  const filteredRooms = rooms.filter((room) => {
-    if (filterStatus !== "all" && room.status !== filterStatus) return false
-    if (filterFloor !== "all" && room.floor.toString() !== filterFloor) return false
+  const { data: rooms, isLoading, isError, error } = useQuery({
+    queryKey: ["rooms"],
+    queryFn: getListPhong,
+  });
+
+  const ttIds = rooms?.data?.map((room) => room.idTt) || []
+  const { data: statuses } = useQuery({
+    queryKey: ["status"],
+    queryFn: () => getListTrangThaiByIds(ttIds),
+    enabled: !!ttIds.length,
+    select: (data) => data.data?.filter((tt) => ttIds?.includes(tt.idTt)),
+  })
+
+  const hpIds = rooms?.data?.map((room) => room.idHp) || []
+  const { data: roomClasses } = useQuery({
+    queryKey: ["room-class"],
+    queryFn: () => getListHangPhongByIds(hpIds),
+    enabled: !!hpIds.length,
+    select: (data) => data.data?.filter((hp) => hpIds?.includes(hp.idHp)),
+  })
+
+  const lpIds = roomClasses?.map((room) => room.idLp) || []
+  const { data: roomTypes } = useQuery({
+    queryKey: ["room-types"],
+    queryFn: () => getListLoaiPhongByIds(lpIds),
+    enabled: !!lpIds.length,
+    select: (data) => data.data?.filter((lp) => lpIds?.includes(lp.idLp)),
+  })
+
+  const filteredRooms = rooms?.data?.filter((room) => {
+    if (filterStatus !== "all" && (statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai || "") !== filterStatus) return false
+    if (filterFloor !== "all" && room.tang.toString() !== filterFloor) return false
     return true
   })
 
@@ -95,9 +105,9 @@ export default function RoomsPage() {
                     <SelectValue placeholder="Chọn loại phòng" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
-                    {roomTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.name}>
-                        {type.name}
+                    {roomClasses?.map((type) => (
+                      <SelectItem key={type.idHp} value={type.idHp}>
+                        {type.idHp}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -112,7 +122,7 @@ export default function RoomsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {Object.entries(statusConfig).map(([status, config]) => {
-          const count = rooms.filter((r) => r.status === status).length
+          const count = rooms?.data?.filter((r) => r.idTt === (statuses?.find((tt) => tt.tenTrangThai == status)?.idTt || "")).length
           return (
             <Card key={status} className="bg-[#1a1a1a] border-[#2a2a2a] p-4">
               <p className="text-gray-400 text-sm mb-1">{config.label}</p>
@@ -192,24 +202,24 @@ export default function RoomsPage() {
           {/* Room Grid/List */}
           {viewMode === "grid" ? (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {filteredRooms.map((room) => (
+              {filteredRooms?.map((room) => (
                 <Card
-                  key={room.id}
+                  key={room.idHp}
                   className="bg-[#1a1a1a] border-[#2a2a2a] p-4 hover:border-blue-500/50 transition-colors cursor-pointer"
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-2xl font-bold text-white">{room.id}</p>
-                        <p className="text-sm text-gray-400">{room.type}</p>
+                        <p className="text-2xl font-bold text-white">{room.idHp}</p>
+                        <p className="text-sm text-gray-400">{room.idHp}</p> // should be type name
                       </div>
-                      <Badge className={statusConfig[room.status as keyof typeof statusConfig].color}>
-                        {statusConfig[room.status as keyof typeof statusConfig].label}
+                      <Badge className={statusConfig[statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai as keyof typeof statusConfig].color}>
+                        {statusConfig[statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai as keyof typeof statusConfig].label}
                       </Badge>
                     </div>
                     <div className="pt-3 border-t border-[#2a2a2a]">
                       <p className="text-sm text-gray-400">Giá/đêm</p>
-                      <p className="text-lg font-semibold text-white">{room.price.toLocaleString()}₫</p>
+                      <p className="text-lg font-semibold text-white">{room.tang.toLocaleString()}₫</p>
                     </div>
                   </div>
                 </Card>
@@ -230,17 +240,17 @@ export default function RoomsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredRooms.map((room) => (
-                      <tr key={room.id} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
-                        <td className="p-4 text-white font-semibold">{room.id}</td>
-                        <td className="p-4 text-gray-400">Tầng {room.floor}</td>
-                        <td className="p-4 text-gray-400">{room.type}</td>
+                    {filteredRooms?.map((room) => (
+                      <tr key={room.idHp} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
+                        <td className="p-4 text-white font-semibold">{room.idHp}</td>
+                        <td className="p-4 text-gray-400">Tầng {room.tang}</td>
+                        <td className="p-4 text-gray-400">{room.idHp}</td>
                         <td className="p-4">
-                          <Badge className={statusConfig[room.status as keyof typeof statusConfig].color}>
-                            {statusConfig[room.status as keyof typeof statusConfig].label}
+                          <Badge className={statusConfig[statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai as keyof typeof statusConfig].color}>
+                            {statusConfig[statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai as keyof typeof statusConfig].label}
                           </Badge>
                         </td>
-                        <td className="p-4 text-white">{room.price.toLocaleString()}₫</td>
+                        <td className="p-4 text-white">{room.tang.toLocaleString()}₫</td>
                         <td className="p-4">
                           <div className="flex gap-2">
                             <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
@@ -283,14 +293,14 @@ export default function RoomsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {roomTypes.map((type) => {
-                    const roomCount = rooms.filter((r) => r.type === type.name).length
+                  {roomTypes?.map((type) => {
+                    const roomCount = rooms?.data?.filter((r) => r.idHp === type.idLp).length
                     return (
-                      <tr key={type.id} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
-                        <td className="p-4 text-white font-semibold">{type.name}</td>
-                        <td className="p-4 text-gray-400">{type.beds}</td>
-                        <td className="p-4 text-gray-400">{type.capacity} người</td>
-                        <td className="p-4 text-white">{type.price.toLocaleString()}₫</td>
+                      <tr key={type.idLp} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
+                        <td className="p-4 text-white font-semibold">{type.idLp}</td>
+                        <td className="p-4 text-gray-400">{type.tenLp}</td>
+                        <td className="p-4 text-gray-400">{5} người</td> //TODO: get peoples number from db
+                        <td className="p-4 text-white">{5}₫</td> //TODO: get price from database
                         <td className="p-4 text-gray-400">{roomCount} phòng</td>
                         <td className="p-4">
                           <div className="flex gap-2">

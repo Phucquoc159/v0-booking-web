@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of KhuyenMai
 export async function GET(request: NextRequest) {
   try {
-    const khuyenMais = await prisma.khuyenMai.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idKm: { in: idsParam.split(',') } }
+      : {}
+
+    const khuyenMais = await prisma.khuyenMai.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

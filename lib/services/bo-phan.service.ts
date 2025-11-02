@@ -24,6 +24,19 @@ export async function getListBoPhan(): Promise<ApiResponse<BoPhan[]>> {
   }
 }
 
+// Get list of BoPhan by ids
+export async function getListBoPhanByIds(ids: string[]): Promise<ApiResponse<BoPhan[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get BoPhan by idBp
 export async function getBoPhan(id: string): Promise<ApiResponse<BoPhan>> {
   try {

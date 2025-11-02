@@ -24,6 +24,19 @@ export async function getListPhieuThue(): Promise<ApiResponse<PhieuThue[]>> {
   }
 }
 
+// Get list of PhieuThue by ids
+export async function getListPhieuThueByIds(ids: string[]): Promise<ApiResponse<PhieuThue[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get PhieuThue by idPt
 export async function getPhieuThue(id: string): Promise<ApiResponse<PhieuThue>> {
   try {

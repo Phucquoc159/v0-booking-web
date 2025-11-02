@@ -24,6 +24,19 @@ export async function getListNhomQuyen(): Promise<ApiResponse<NhomQuyen[]>> {
   }
 }
 
+// Get list of NhomQuyen by ids
+export async function getListNhomQuyenByIds(ids: string[]): Promise<ApiResponse<NhomQuyen[]>> {
+  try {
+    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 // Get NhomQuyen by idNq
 export async function getNhomQuyen(id: string): Promise<ApiResponse<NhomQuyen>> {
   try {

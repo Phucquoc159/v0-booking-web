@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of KieuPhong
 export async function GET(request: NextRequest) {
   try {
-    const kieuPhongs = await prisma.kieuPhong.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idKp: { in: idsParam.split(',') } }
+      : {}
+
+    const kieuPhongs = await prisma.kieuPhong.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,

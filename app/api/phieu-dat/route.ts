@@ -6,7 +6,14 @@ import { prisma } from '@/lib/prisma'
 // GET - Get list of PhieuDat
 export async function GET(request: NextRequest) {
   try {
-    const phieuDats = await prisma.phieuDat.findMany()
+		const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+		const whereClause = idsParam
+      ? { idPd: { in: idsParam.split(',') } }
+      : {}
+
+    const phieuDats = await prisma.phieuDat.findMany({ where: whereClause })
 
     return NextResponse.json({
       success: true,
