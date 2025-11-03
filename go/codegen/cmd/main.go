@@ -39,5 +39,6 @@ func main() {
 		Models:          Models,
 		Path:            "../../../",
 		GenerateService: true,
+		GenerateAuth:    true,
 	})
 }

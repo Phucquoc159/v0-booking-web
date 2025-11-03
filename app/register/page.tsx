@@ -7,14 +7,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useMutation } from "@tanstack/react-query"
-import { Mail, Phone, Lock, User, ArrowLeft } from "lucide-react"
+import { Mail, Phone, Lock, User, ArrowLeft, Loader2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { createKhachHang } from "@/lib/services"
+import { register } from "@/lib/services/auth.service"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  
   const [emailData, setEmailData] = useState({
     name: "",
     email: "",
@@ -29,41 +31,45 @@ export default function RegisterPage() {
     confirmPassword: "",
   })
 
-  const createKhachHangMutation = useMutation({
-    mutationFn: createKhachHang,
-    onSuccess: () => {
-      alert("Đăng ký thành công!")
-      router.push("/login")
-    },
-    onError: (error: any) => {
-      alert(`Đăng ký thất bại: ${error.response?.data?.message || error.message}`)
-    },
-  })
-
-  const handleRegister = (data: { name: string; password: string; email?: string; phone?: string }) => {
-    const parts = data.name.trim().split(" ")
-    const ten = parts.pop() || ""
-    const ho = parts.join(" ")
-
-    // CCCD is required as ID, using a random string or phone/email for now.
-    // This should be handled properly based on business logic.
-    const cccd = data.phone || data.email || `KH${Date.now()}`
-
-    createKhachHangMutation.mutate({
-      //@ts-ignore
-      cccd,
-      ho,
-      ten,
-      email: data.email || null,
-      sdt: data.phone || null,
-      matKhau: data.password,
-    })
+  const handleRegister = async (data: { name: string; password: string; email?: string; phone?: string }) => {
+    setIsLoading(true)
+    setError("")
+    
+    try {
+      const parts = data.name.trim().split(" ")
+      const ten = parts.pop() || ""
+      const ho = parts.join(" ")
+      
+      const registerData = {
+        username: data.email || data.phone || "",
+        password: data.password,
+        email: data.email || "",
+        ho,
+        ten,
+        sdt: data.phone || undefined,
+        idBp: undefined,
+        idNq: undefined
+      }
+      
+      const response = await register(registerData)
+      
+      if (response.success) {
+        alert("Đăng ký thành công!")
+        router.push("/login")
+      } else {
+        setError(response.message || "Đăng ký thất bại. Vui lòng thử lại.")
+      }
+    } catch (err: any) {
+      setError(err.message || "Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại sau!")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleEmailRegister = (e: React.FormEvent) => {
     e.preventDefault()
     if (emailData.password !== emailData.confirmPassword) {
-      alert("Mật khẩu không khớp!")
+      setError("Mật khẩu không khớp!")
       return
     }
     handleRegister({ ...emailData })
@@ -72,7 +78,7 @@ export default function RegisterPage() {
   const handlePhoneRegister = (e: React.FormEvent) => {
     e.preventDefault()
     if (phoneData.password !== phoneData.confirmPassword) {
-      alert("Mật khẩu không khớp!")
+      setError("Mật khẩu không khớp!")
       return
     }
     handleRegister({ ...phoneData })
@@ -100,13 +106,20 @@ export default function RegisterPage() {
             <CardDescription>Tạo tài khoản để đặt phòng dễ dàng hơn</CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
+            
             <Tabs defaultValue="email" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="email" className="gap-2">
+                <TabsTrigger value="email" className="gap-2" disabled={isLoading}>
                   <Mail className="h-4 w-4" />
                   Email
                 </TabsTrigger>
-                <TabsTrigger value="phone" className="gap-2">
+                <TabsTrigger value="phone" className="gap-2" disabled={isLoading}>
                   <Phone className="h-4 w-4" />
                   Số điện thoại
                 </TabsTrigger>
@@ -126,6 +139,7 @@ export default function RegisterPage() {
                         value={emailData.name}
                         onChange={(e) => setEmailData({ ...emailData, name: e.target.value })}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                       />
                     </div>
@@ -141,6 +155,7 @@ export default function RegisterPage() {
                         value={emailData.email}
                         onChange={(e) => setEmailData({ ...emailData, email: e.target.value })}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                       />
                     </div>
@@ -156,6 +171,7 @@ export default function RegisterPage() {
                         value={emailData.password}
                         onChange={(e) => setEmailData({ ...emailData, password: e.target.value })}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                         minLength={6}
                       />
@@ -173,13 +189,25 @@ export default function RegisterPage() {
                         value={emailData.confirmPassword}
                         onChange={(e) => setEmailData({ ...emailData, confirmPassword: e.target.value })}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                         minLength={6}
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                    Đăng Ký
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Đăng Ký"
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -198,6 +226,7 @@ export default function RegisterPage() {
                         value={phoneData.name}
                         onChange={(e) => setPhoneData({ ...phoneData, name: e.target.value })}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                       />
                     </div>
@@ -213,6 +242,7 @@ export default function RegisterPage() {
                         value={phoneData.phone}
                         onChange={(e) => setPhoneData({ ...phoneData, phone: e.target.value })}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                       />
                     </div>
@@ -228,6 +258,7 @@ export default function RegisterPage() {
                         value={phoneData.password}
                         onChange={(e) => setPhoneData({ ...phoneData, password: e.target.value })}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                         minLength={6}
                       />
@@ -245,13 +276,25 @@ export default function RegisterPage() {
                         value={phoneData.confirmPassword}
                         onChange={(e) => setPhoneData({ ...phoneData, confirmPassword: e.target.value })}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                         minLength={6}
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                    Đăng Ký
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Đăng Ký"
+                    )}
                   </Button>
                 </form>
               </TabsContent>

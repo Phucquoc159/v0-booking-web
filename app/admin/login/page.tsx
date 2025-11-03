@@ -7,26 +7,47 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
-import { Lock, Mail, Hotel, AlertCircle } from "lucide-react"
+import { Lock, Mail, Hotel, AlertCircle, Loader2 } from "lucide-react"
+import { login } from "@/lib/services/auth.service"
+import { useRouter } from "next/navigation"
 
 export default function AdminLoginPage() {
+  const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setIsLoading(true)
 
-    // Check admin credentials
-    if (username === "admin" && password === "admin123") {
-      // Store session
-      localStorage.setItem("adminAuth", "true")
-      localStorage.setItem("adminUser", username)
-      // Redirect to admin dashboard
-      window.location.href = "/admin/dashboard"
-    } else {
-      setError("Tên đăng nhập hoặc mật khẩu không đúng!")
+    try {
+      const response = await login({ username, password })
+
+      if (response.success && response.data) {
+        // Check if user has admin privileges
+        const isAdmin = response.data.user.nhomQuyen?.tenNc?.toLowerCase().includes('admin')
+
+        if (isAdmin) {
+          // Store user info
+          localStorage.setItem("adminAuth", "true")
+          localStorage.setItem("adminUser", username)
+          localStorage.setItem("adminUserData", JSON.stringify(response.data.user))
+
+          // Redirect to admin dashboard
+          router.push("/admin/dashboard")
+        } else {
+          setError("Tài khoản không có quyền truy cập vào trang quản trị!")
+        }
+      } else {
+        setError(response.message || "Tên đăng nhập hoặc mật khẩu không đúng!")
+      }
+    } catch (err) {
+      setError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau!")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -62,10 +83,11 @@ export default function AdminLoginPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="admin"
+                placeholder="Nhập tên đăng nhập"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="pl-10 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-500"
+                disabled={isLoading}
                 required
               />
             </div>
@@ -84,13 +106,25 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-500"
+                disabled={isLoading}
                 required
               />
             </div>
           </div>
 
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11">
-            Đăng Nhập
+          <Button 
+            type="submit" 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang xử lý...
+              </>
+            ) : (
+              "Đăng Nhập"
+            )}
           </Button>
         </form>
 

@@ -8,25 +8,75 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Mail, Phone, Lock, ArrowLeft } from "lucide-react"
+import { Mail, Phone, Lock, ArrowLeft, Loader2, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { login } from "@/lib/services/auth.service"
 
 export default function LoginPage() {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  
   const [emailOrPhone, setEmailOrPhone] = useState("")
   const [password, setPassword] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [phonePassword, setPhonePassword] = useState("")
 
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Email login:", emailOrPhone)
-    // Handle email login logic here
+    setIsLoading(true)
+    setError("")
+    
+    try {
+      const response = await login({
+        username: emailOrPhone,
+        password: password
+      })
+      
+      if (response.success && response.data) {
+        // Lưu thông tin người dùng
+        localStorage.setItem("userAuth", "true")
+        localStorage.setItem("userData", JSON.stringify(response.data.user))
+        
+        // Chuyển hướng đến trang chủ
+        router.push("/")
+      } else {
+        setError(response.message || "Email hoặc mật khẩu không đúng!")
+      }
+    } catch (err: any) {
+      setError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau!")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handlePhoneLogin = (e: React.FormEvent) => {
+  const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Phone login:", phoneNumber)
-    // Handle phone login logic here
+    setIsLoading(true)
+    setError("")
+    
+    try {
+      const response = await login({
+        username: phoneNumber,
+        password: phonePassword
+      })
+      
+      if (response.success && response.data) {
+        // Lưu thông tin người dùng
+        localStorage.setItem("userAuth", "true")
+        localStorage.setItem("userData", JSON.stringify(response.data.user))
+        
+        // Chuyển hướng đến trang chủ
+        router.push("/")
+      } else {
+        setError(response.message || "Số điện thoại hoặc mật khẩu không đúng!")
+      }
+    } catch (err: any) {
+      setError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau!")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -51,13 +101,20 @@ export default function LoginPage() {
             <CardDescription>Đăng nhập để quản lý đặt phòng của bạn</CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
+            
             <Tabs defaultValue="email" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="email" className="gap-2">
+                <TabsTrigger value="email" className="gap-2" disabled={isLoading}>
                   <Mail className="h-4 w-4" />
                   Email
                 </TabsTrigger>
-                <TabsTrigger value="phone" className="gap-2">
+                <TabsTrigger value="phone" className="gap-2" disabled={isLoading}>
                   <Phone className="h-4 w-4" />
                   Số điện thoại
                 </TabsTrigger>
@@ -77,6 +134,7 @@ export default function LoginPage() {
                         value={emailOrPhone}
                         onChange={(e) => setEmailOrPhone(e.target.value)}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                       />
                     </div>
@@ -97,12 +155,24 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                    Đăng Nhập
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Đăng Nhập"
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -121,6 +191,7 @@ export default function LoginPage() {
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                       />
                     </div>
@@ -141,12 +212,24 @@ export default function LoginPage() {
                         value={phonePassword}
                         onChange={(e) => setPhonePassword(e.target.value)}
                         className="pl-10"
+                        disabled={isLoading}
                         required
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                    Đăng Nhập
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Đăng Nhập"
+                    )}
                   </Button>
                 </form>
               </TabsContent>
