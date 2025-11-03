@@ -30,7 +30,7 @@ export interface AuthResponse {
   message?: string
 }
 
-const API_BASE = '/api/auth'
+const API_BASE = 'http://localhost:3000/api/auth'
 
 // Login
 export async function login(credentials: LoginRequest): Promise<AuthResponse> {

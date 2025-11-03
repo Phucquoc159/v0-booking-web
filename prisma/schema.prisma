@@ -334,7 +334,7 @@ model CTKhachO {
   khachHang    KhachHang    @relation(fields: [cmnd], references: [cccd])
 
   @@id([idCtpt, cmnd])
-  @@map("CTKhachO")
+  @@map("ct_khach_o")
 }
 
 // Bảng đổi phòng
