@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getListKhachHang, createKhachHang } from "@/lib/services/khach-hang.service"
 import { KhachHang } from "@/lib/generated/prisma"
 import { Search, Plus, Eye, LogIn, LogOut } from "lucide-react"
+import { PHAI } from "@/lib/constants/constants"
 
 
 const statusConfig = {
@@ -77,6 +78,10 @@ export default function CustomersPage() {
     setNewCustomer((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleSelectChange = (value: string) => {
+    setNewCustomer((prev) => ({ ...prev, gioiTinh: value }))
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,13 +132,13 @@ export default function CustomersPage() {
                     </div>
                     <div>
                       <Label>Giới Tính</Label>
-                      <Select>
+                      <Select value={newCustomer.gioiTinh} onValueChange={handleSelectChange}>
                         <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
                           <SelectValue placeholder="Chọn" />
                         </SelectTrigger>
                         <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
-                          <SelectItem value="male">Nam</SelectItem>
-                          <SelectItem value="female">Nữ</SelectItem>
+                          <SelectItem value={PHAI.NAM}>Nam</SelectItem>
+                          <SelectItem value={PHAI.NU}>Nữ</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

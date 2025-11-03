@@ -18,84 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Eye, Edit, X } from "lucide-react"
-
-const bookings = [
-  {
-    id: "BK001",
-    customer: "Nguyễn Văn A",
-    phone: "0901234567",
-    email: "nguyenvana@email.com",
-    room: "101",
-    roomType: "Standard",
-    checkIn: "2025-01-15",
-    checkOut: "2025-01-18",
-    nights: 3,
-    guests: 2,
-    total: 3600000,
-    status: "confirmed",
-    createdAt: "2025-01-10",
-  },
-  {
-    id: "BK002",
-    customer: "Trần Thị B",
-    phone: "0912345678",
-    email: "tranthib@email.com",
-    room: "201",
-    roomType: "Suite",
-    checkIn: "2025-01-16",
-    checkOut: "2025-01-20",
-    nights: 4,
-    guests: 3,
-    total: 11200000,
-    status: "pending",
-    createdAt: "2025-01-11",
-  },
-  {
-    id: "BK003",
-    customer: "Lê Minh C",
-    phone: "0923456789",
-    email: "leminhc@email.com",
-    room: "302",
-    roomType: "VIP",
-    checkIn: "2025-01-14",
-    checkOut: "2025-01-16",
-    nights: 2,
-    guests: 2,
-    total: 7000000,
-    status: "checked-in",
-    createdAt: "2025-01-09",
-  },
-  {
-    id: "BK004",
-    customer: "Phạm Thu D",
-    phone: "0934567890",
-    email: "phamthud@email.com",
-    room: "203",
-    roomType: "Executive",
-    checkIn: "2025-01-12",
-    checkOut: "2025-01-14",
-    nights: 2,
-    guests: 1,
-    total: 4400000,
-    status: "completed",
-    createdAt: "2025-01-08",
-  },
-  {
-    id: "BK005",
-    customer: "Hoàng Văn E",
-    phone: "0945678901",
-    email: "hoangvane@email.com",
-    room: "104",
-    roomType: "Deluxe",
-    checkIn: "2025-01-20",
-    checkOut: "2025-01-22",
-    nights: 2,
-    guests: 2,
-    total: 3000000,
-    status: "cancelled",
-    createdAt: "2025-01-12",
-  },
-]
+import { useBookings } from "@/lib/hooks/booking"
 
 const statusConfig = {
   pending: { label: "Chờ Xác Nhận", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
@@ -109,8 +32,10 @@ export default function BookingsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
 
-  const filteredBookings = bookings.filter((booking) => {
-    if (filterStatus !== "all" && booking.status !== filterStatus) return false
+  const { bookings } = useBookings()
+
+  const filteredBookings = bookings?.filter((booking) => {
+    if (filterStatus !== "all" && booking.trangThai !== filterStatus) return false
     return true
   })
 
@@ -195,7 +120,7 @@ export default function BookingsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {Object.entries(statusConfig).map(([status, config]) => {
-          const count = bookings.filter((b) => b.status === status).length
+          const count = bookings?.filter((b) => b.trangThai === status).length
           return (
             <Card key={status} className="bg-[#1a1a1a] border-[#2a2a2a] p-4">
               <p className="text-gray-400 text-sm mb-1">{config.label}</p>
@@ -263,32 +188,32 @@ export default function BookingsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
-                      <td className="p-4 text-white font-semibold">{booking.id}</td>
+                  {filteredBookings?.map((booking) => (
+                    <tr key={booking.idPd} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
+                      <td className="p-4 text-white font-semibold">{booking.idPd}</td>
                       <td className="p-4">
                         <div>
-                          <p className="text-white font-medium">{booking.customer}</p>
-                          <p className="text-sm text-gray-400">{booking.phone}</p>
+                          <p className="text-white font-medium">{booking.khachHang?.ho}</p>
+                          <p className="text-sm text-gray-400">{booking.khachHang?.sdt}</p>
                         </div>
                       </td>
                       <td className="p-4">
                         <div>
-                          <p className="text-white">{booking.room}</p>
-                          <p className="text-sm text-gray-400">{booking.roomType}</p>
+                          <p className="text-white">{5}</p> //TODO: get số phòng
+                          <p className="text-sm text-gray-400">{5 + " VIP"}</p> //TODO: get tên loại phòng
                         </div>
                       </td>
                       <td className="p-4">
                         <div>
-                          <p className="text-white text-sm">{booking.checkIn}</p>
-                          <p className="text-gray-400 text-sm">{booking.checkOut}</p>
+                          <p className="text-white text-sm">{booking.ngayDat.toDateString()}</p>
+                          <p className="text-gray-400 text-sm">{booking.ngayDi.toDateString()}</p>
                         </div>
                       </td>
-                      <td className="p-4 text-gray-400">{booking.nights} đêm</td>
-                      <td className="p-4 text-white font-semibold">{booking.total.toLocaleString()}₫</td>
+                      <td className="p-4 text-gray-400">{Math.abs(booking.ngayDi.getTime() - booking.ngayDat.getTime()) / (1000 * 60 * 60 * 24)} đêm</td>
+                      <td className="p-4 text-white font-semibold">{booking.soTienCoc.toString()}₫</td>
                       <td className="p-4">
-                        <Badge className={statusConfig[booking.status as keyof typeof statusConfig].color}>
-                          {statusConfig[booking.status as keyof typeof statusConfig].label}
+                        <Badge className={statusConfig[booking.trangThai as keyof typeof statusConfig].color}>
+                          {statusConfig[booking.trangThai as keyof typeof statusConfig].label}
                         </Badge>
                       </td>
                       <td className="p-4">
@@ -329,18 +254,18 @@ export default function BookingsPage() {
                 Đặt Phòng Ngày {selectedDate?.toLocaleDateString("vi-VN")}
               </h2>
               <div className="space-y-3">
-                {bookings.slice(0, 3).map((booking) => (
-                  <div key={booking.id} className="p-3 bg-[#0a0a0a] rounded-lg border border-[#2a2a2a]">
+                {bookings?.slice(0, 3).map((booking) => (
+                  <div key={booking.idPd} className="p-3 bg-[#0a0a0a] rounded-lg border border-[#2a2a2a]">
                     <div className="flex items-start justify-between mb-2">
-                      <p className="text-white font-medium">{booking.customer}</p>
-                      <Badge className={statusConfig[booking.status as keyof typeof statusConfig].color}>
-                        {statusConfig[booking.status as keyof typeof statusConfig].label}
+                      <p className="text-white font-medium">{booking.khachHang?.ho}</p>
+                      <Badge className={statusConfig[booking.trangThai as keyof typeof statusConfig].color}>
+                        {statusConfig[booking.trangThai as keyof typeof statusConfig].label}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-400">
-                      Phòng {booking.room} - {booking.roomType}
+                      Phòng {5} - {5 + " VIP"} //TODO: get số phòng và tên loại phòng
                     </p>
-                    <p className="text-sm text-gray-400">{booking.nights} đêm</p>
+                    <p className="text-sm text-gray-400">{booking.ngayBdThue.toLocaleDateString("vi-VN")} - {booking.ngayDi.toLocaleDateString("vi-VN")}</p>
                   </div>
                 ))}
               </div>

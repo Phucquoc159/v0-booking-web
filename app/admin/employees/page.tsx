@@ -7,9 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Edit, Trash2, Shield } from "lucide-react"
-import { getListNhanVien, createNhanVien, deleteNhanVien } from "@/lib/services/nhan-vien.service";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNhanVien, deleteNhanVien } from "@/lib/services/nhan-vien.service";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEmployees } from "@/lib/hooks/employee";
 import { useState } from "react"
+import { defaultIdBp, defaultIdNq } from "@/lib/constants/constants"
 
 const departmentConfig = {
   admin: { label: "Quản Trị", color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
@@ -40,10 +42,7 @@ export default function EmployeesPage() {
 
   const queryClient = useQueryClient();
 
-  const { data: employees, isLoading, isError, error } = useQuery({
-    queryKey: ["employees"],
-    queryFn: getListNhanVien,
-  });
+  const { employees, isLoading, isError, error } = useEmployees();
 
   const deleteMutation = useMutation({
     mutationFn: deleteNhanVien,
@@ -86,7 +85,13 @@ export default function EmployeesPage() {
 
   const createEmployee = () => {
     const idNv = "NV" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    createMutation.mutate({ ...formData, idNv, idBp: '1', idNq: 'NQ1' }); // Cung cấp giá trị mặc định nếu cần
+    createMutation.mutate({
+      ...formData,
+      //@ts-ignore
+      idNv,
+      idBp: defaultIdBp,
+      idNq: defaultIdNq,
+     }); // Cung cấp giá trị mặc định nếu cần
   };
 
   const handleFullNameChange = (value: string) => {
@@ -196,7 +201,7 @@ export default function EmployeesPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Object.entries(departmentConfig).map(([dept, config]) => {
-          const count = employees?.data?.filter((e) => e.idBp === dept).length
+          const count = employees?.filter((e) => e.idBp === dept).length
           return (
             <Card key={dept} className="bg-[#1a1a1a] border-[#2a2a2a] p-4">
               <p className="text-gray-400 text-sm mb-1">{config.label}</p>
@@ -231,7 +236,7 @@ export default function EmployeesPage() {
               </tr>
             </thead>
             <tbody>
-              {employees?.data?.map((employee) => (
+              {employees?.map((employee) => (
                 <tr key={employee.idNv} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
                   <td className="p-4 text-white font-semibold">{employee.idNv}</td>
                   <td className="p-4 text-white font-medium">{employee.ho + " " + employee.ten}</td>

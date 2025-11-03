@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Search, Plus, Edit, Trash2, Grid3x3, List } from "lucide-react"
-import { getListHangPhongByIds, getListLoaiPhongByIds, getListPhong, getListTrangThai, getListTrangThaiByIds, getTrangThai } from "@/lib/services"
-import { useQuery } from "@tanstack/react-query"
+import { useRooms } from "@/lib/hooks/room"
 
 // Mock data
 const statusConfig = {
@@ -34,40 +33,24 @@ export default function RoomsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterFloor, setFilterFloor] = useState<string>("all")
 
-  const { data: rooms, isLoading, isError, error } = useQuery({
-    queryKey: ["rooms"],
-    queryFn: getListPhong,
-  });
+  const { rooms, isLoading, isError, error } = useRooms()
 
-  const ttIds = rooms?.data?.map((room) => room.idTt) || []
-  const { data: statuses } = useQuery({
-    queryKey: ["status"],
-    queryFn: () => getListTrangThaiByIds(ttIds),
-    enabled: !!ttIds.length,
-    select: (data) => data.data?.filter((tt) => ttIds?.includes(tt.idTt)),
-  })
+  const roomClasses = rooms
+    ? Array.from(new Map(rooms.map(room => [room.hangPhong.idHp, room.hangPhong])).values())
+    : []
 
-  const hpIds = rooms?.data?.map((room) => room.idHp) || []
-  const { data: roomClasses } = useQuery({
-    queryKey: ["room-class"],
-    queryFn: () => getListHangPhongByIds(hpIds),
-    enabled: !!hpIds.length,
-    select: (data) => data.data?.filter((hp) => hpIds?.includes(hp.idHp)),
-  })
+  const roomTypes = rooms
+    ? Array.from(new Map(rooms.map(room => [room.hangPhong.loaiPhong.idLp, room.hangPhong.loaiPhong])).values())
+    : []
 
-  const lpIds = roomClasses?.map((room) => room.idLp) || []
-  const { data: roomTypes } = useQuery({
-    queryKey: ["room-types"],
-    queryFn: () => getListLoaiPhongByIds(lpIds),
-    enabled: !!lpIds.length,
-    select: (data) => data.data?.filter((lp) => lpIds?.includes(lp.idLp)),
-  })
-
-  const filteredRooms = rooms?.data?.filter((room) => {
-    if (filterStatus !== "all" && (statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai || "") !== filterStatus) return false
+  const filteredRooms = rooms?.filter((room) => {
+    if (filterStatus !== "all" && room.trangThai.tenTrangThai.toLowerCase() !== filterStatus) return false
     if (filterFloor !== "all" && room.tang.toString() !== filterFloor) return false
     return true
   })
+
+  if (isLoading) return <div>Loading...</div>
+  if (isError) return <div>Error loading rooms</div>
 
   return (
     <div className="space-y-6">
@@ -107,7 +90,7 @@ export default function RoomsPage() {
                   <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
                     {roomClasses?.map((type) => (
                       <SelectItem key={type.idHp} value={type.idHp}>
-                        {type.idHp}
+                        {type.loaiPhong.tenLp} - {type.kieuPhong.tenKp}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -122,7 +105,7 @@ export default function RoomsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {Object.entries(statusConfig).map(([status, config]) => {
-          const count = rooms?.data?.filter((r) => r.idTt === (statuses?.find((tt) => tt.tenTrangThai == status)?.idTt || "")).length
+          const count = rooms?.filter((r) => r.trangThai.tenTrangThai.toLowerCase() === status).length
           return (
             <Card key={status} className="bg-[#1a1a1a] border-[#2a2a2a] p-4">
               <p className="text-gray-400 text-sm mb-1">{config.label}</p>
@@ -210,11 +193,11 @@ export default function RoomsPage() {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-2xl font-bold text-white">{room.idHp}</p>
-                        <p className="text-sm text-gray-400">{room.idHp}</p> // should be type name
+                        <p className="text-2xl font-bold text-white">{room.soPhong}</p>
+                        <p className="text-sm text-gray-400">{room.hangPhong.loaiPhong.tenLp}</p>
                       </div>
-                      <Badge className={statusConfig[statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai as keyof typeof statusConfig].color}>
-                        {statusConfig[statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai as keyof typeof statusConfig].label}
+                      <Badge className={statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.color}>
+                        {statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.label}
                       </Badge>
                     </div>
                     <div className="pt-3 border-t border-[#2a2a2a]">
@@ -242,12 +225,12 @@ export default function RoomsPage() {
                   <tbody>
                     {filteredRooms?.map((room) => (
                       <tr key={room.idHp} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
-                        <td className="p-4 text-white font-semibold">{room.idHp}</td>
+                        <td className="p-4 text-white font-semibold">{room.soPhong}</td>
                         <td className="p-4 text-gray-400">Tầng {room.tang}</td>
-                        <td className="p-4 text-gray-400">{room.idHp}</td>
+                        <td className="p-4 text-gray-400">{room.hangPhong.loaiPhong.tenLp}</td>
                         <td className="p-4">
-                          <Badge className={statusConfig[statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai as keyof typeof statusConfig].color}>
-                            {statusConfig[statuses?.find((tt) => tt.idTt === room.idTt)?.tenTrangThai as keyof typeof statusConfig].label}
+                          <Badge className={statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.color}>
+                            {statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.label}
                           </Badge>
                         </td>
                         <td className="p-4 text-white">{room.tang.toLocaleString()}₫</td>
@@ -294,12 +277,12 @@ export default function RoomsPage() {
                 </thead>
                 <tbody>
                   {roomTypes?.map((type) => {
-                    const roomCount = rooms?.data?.filter((r) => r.idHp === type.idLp).length
+                    const roomCount = rooms?.filter((r) => r.hangPhong.idLp === type.idLp).length
                     return (
                       <tr key={type.idLp} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
-                        <td className="p-4 text-white font-semibold">{type.idLp}</td>
-                        <td className="p-4 text-gray-400">{type.tenLp}</td>
-                        <td className="p-4 text-gray-400">{5} người</td> //TODO: get peoples number from db
+                        <td className="p-4 text-white font-semibold">{type.tenLp}</td>
+                        <td className="p-4 text-gray-400">{roomClasses.find(rc => rc.idLp === type.idLp)?.kieuPhong.tenKp}</td>
+                        <td className="p-4 text-gray-400">{roomClasses.find(rc => rc.idLp === type.idLp)?.kieuPhong.soLuongKhach} người</td>
                         <td className="p-4 text-white">{5}₫</td> //TODO: get price from database
                         <td className="p-4 text-gray-400">{roomCount} phòng</td>
                         <td className="p-4">

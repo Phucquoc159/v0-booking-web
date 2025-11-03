@@ -44,9 +44,10 @@ const (
 
 type ModelConfig struct {
 	Model        Model
-	PrimaryKey   string   // Single primary key field
-	CompositeKey []string // Composite primary key fields
-	RouteParam   string   // URL parameter name
+	PrimaryKey   string
+	CompositeKey []string
+	RouteParam   string
+	Relations    []string // Relations to always include
 }
 
 type Generator struct {
@@ -56,42 +57,176 @@ type Generator struct {
 type GenerateRequest struct {
 	Models          []Model
 	Path            string
-	GenerateService bool // Generate service files
+	GenerateService bool
 }
 
-// Model configurations with primary key info
+// Complete model configurations with relations
 var modelConfigs = map[Model]ModelConfig{
-	KhachHang:    {Model: KhachHang, PrimaryKey: "cccd", RouteParam: "cccd"},
-	BoPhan:       {Model: BoPhan, PrimaryKey: "idBp", RouteParam: "id"},
-	NhomQuyen:    {Model: NhomQuyen, PrimaryKey: "idNq", RouteParam: "id"},
-	NhanVien:     {Model: NhanVien, PrimaryKey: "idNv", RouteParam: "id"},
-	LoaiPhong:    {Model: LoaiPhong, PrimaryKey: "idLp", RouteParam: "id"},
-	KieuPhong:    {Model: KieuPhong, PrimaryKey: "idKp", RouteParam: "id"},
-	HangPhong:    {Model: HangPhong, PrimaryKey: "idHangPhong", RouteParam: "id"},
-	AnhHangPhong: {Model: AnhHangPhong, PrimaryKey: "idAnhHangPhong", RouteParam: "id"},
-	TrangThai:    {Model: TrangThai, PrimaryKey: "idTt", RouteParam: "id"},
-	Phong:        {Model: Phong, PrimaryKey: "soPhong", RouteParam: "soPhong"},
-	TienNghi:     {Model: TienNghi, PrimaryKey: "idTn", RouteParam: "id"},
-	KhuyenMai:    {Model: KhuyenMai, PrimaryKey: "idKm", RouteParam: "id"},
-	PhieuDat:     {Model: PhieuDat, PrimaryKey: "idPd", RouteParam: "id"},
-	PhieuThue:    {Model: PhieuThue, PrimaryKey: "idPt", RouteParam: "id"},
-	HoaDon:       {Model: HoaDon, PrimaryKey: "idHd", RouteParam: "id"},
-	CTPhieuThue:  {Model: CTPhieuThue, PrimaryKey: "idCtPt", RouteParam: "id"},
-	DichVu:       {Model: DichVu, PrimaryKey: "idDv", RouteParam: "id"},
-	PhuThu:       {Model: PhuThu, PrimaryKey: "idPhuThu", RouteParam: "id"},
+	KhachHang: {
+		Model:      KhachHang,
+		PrimaryKey: "cccd",
+		RouteParam: "cccd",
+		Relations:  []string{},
+	},
+	BoPhan: {
+		Model:      BoPhan,
+		PrimaryKey: "idBp",
+		RouteParam: "id",
+		Relations:  []string{"nhanViens", "quanLys"},
+	},
+	NhomQuyen: {
+		Model:      NhomQuyen,
+		PrimaryKey: "idNq",
+		RouteParam: "id",
+		Relations:  []string{"nhanViens"},
+	},
+	NhanVien: {
+		Model:      NhanVien,
+		PrimaryKey: "idNv",
+		RouteParam: "id",
+		Relations:  []string{"boPhan", "nhomQuyen"},
+	},
+	LoaiPhong: {
+		Model:      LoaiPhong,
+		PrimaryKey: "idLp",
+		RouteParam: "id",
+		Relations:  []string{"hangPhongs"},
+	},
+	KieuPhong: {
+		Model:      KieuPhong,
+		PrimaryKey: "idKp",
+		RouteParam: "id",
+		Relations:  []string{"hangPhongs"},
+	},
+	HangPhong: {
+		Model:      HangPhong,
+		PrimaryKey: "idHp",
+		RouteParam: "id",
+		Relations:  []string{"kieuPhong", "loaiPhong", "giaHangPhongs", "anhHangPhongs", "phongs", "ctTienNghis"},
+	},
+	AnhHangPhong: {
+		Model:      AnhHangPhong,
+		PrimaryKey: "idAhp",
+		RouteParam: "id",
+		Relations:  []string{"hangPhong"},
+	},
+	TrangThai: {
+		Model:      TrangThai,
+		PrimaryKey: "idTt",
+		RouteParam: "id",
+		Relations:  []string{"phongs"},
+	},
+	Phong: {
+		Model:      Phong,
+		PrimaryKey: "soPhong",
+		RouteParam: "soPhong",
+		Relations:  []string{"hangPhong", "trangThai"},
+	},
+	TienNghi: {
+		Model:      TienNghi,
+		PrimaryKey: "idTn",
+		RouteParam: "id",
+		Relations:  []string{"ctTienNghis"},
+	},
+	KhuyenMai: {
+		Model:      KhuyenMai,
+		PrimaryKey: "idKm",
+		RouteParam: "id",
+		Relations:  []string{"ctKhuyenMais"},
+	},
+	PhieuDat: {
+		Model:      PhieuDat,
+		PrimaryKey: "idPd",
+		RouteParam: "id",
+		Relations:  []string{"khachHang", "nhanVien", "ctPhieuDats", "phieuThues"},
+	},
+	PhieuThue: {
+		Model:      PhieuThue,
+		PrimaryKey: "idPt",
+		RouteParam: "id",
+		Relations:  []string{"nhanVien", "khachHang", "phieuDat", "hoaDons", "cTPhieuThues"},
+	},
+	HoaDon: {
+		Model:      HoaDon,
+		PrimaryKey: "idHd",
+		RouteParam: "id",
+		Relations:  []string{"nhanVien", "phieuThue", "cTPhieuThues", "cTDichVus", "cTPhuThus"},
+	},
+	CTPhieuThue: {
+		Model:      CTPhieuThue,
+		PrimaryKey: "idCtpt",
+		RouteParam: "id",
+		Relations:  []string{"phieuThue", "phong", "hoaDon", "cTKhachOs", "doiPhongs"},
+	},
+	DichVu: {
+		Model:      DichVu,
+		PrimaryKey: "idDv",
+		RouteParam: "id",
+		Relations:  []string{"giaDichVus", "ctDichVus"},
+	},
+	PhuThu: {
+		Model:      PhuThu,
+		PrimaryKey: "idPt",
+		RouteParam: "id",
+		Relations:  []string{"giaPhuThus", "ctPhuThus"},
+	},
 
 	// Composite key models
-	QuanLy:       {Model: QuanLy, CompositeKey: []string{"idBp", "manv"}},
-	CTTienNghi:   {Model: CTTienNghi, CompositeKey: []string{"idTn", "idHangPhong"}},
-	CTKhuyenMai:  {Model: CTKhuyenMai, CompositeKey: []string{"idKm", "idHangPhong"}},
-	CTPhieuDat:   {Model: CTPhieuDat, CompositeKey: []string{"idPd", "idHangPhong"}},
-	CTKhachO:     {Model: CTKhachO, CompositeKey: []string{"idCtPt", "cmnd"}},
-	DoiPhong:     {Model: DoiPhong, CompositeKey: []string{"idCtPt", "soPhongMoi"}},
-	CTDichVu:     {Model: CTDichVu, CompositeKey: []string{"idCtPt", "idDv", "ngaySuDung"}},
-	CTPhuThu:     {Model: CTPhuThu, CompositeKey: []string{"idPhuThu", "idCtPt"}},
-	GiaHangPhong: {Model: GiaHangPhong, CompositeKey: []string{"idHangPhong", "ngayApDung"}},
-	GiaDichVu:    {Model: GiaDichVu, CompositeKey: []string{"idDv", "ngayApDung"}},
-	GiaPhuThu:    {Model: GiaPhuThu, CompositeKey: []string{"idPhuThu", "ngayApDung"}},
+	QuanLy: {
+		Model:        QuanLy,
+		CompositeKey: []string{"idBp", "manv"},
+		Relations:    []string{"boPhan", "nhanVien"},
+	},
+	CTTienNghi: {
+		Model:        CTTienNghi,
+		CompositeKey: []string{"idTn", "idHp"},
+		Relations:    []string{"tienNghi", "hangPhong"},
+	},
+	CTKhuyenMai: {
+		Model:        CTKhuyenMai,
+		CompositeKey: []string{"idKm", "idHp"},
+		Relations:    []string{"khuyenMai", "hangPhong"},
+	},
+	CTPhieuDat: {
+		Model:        CTPhieuDat,
+		CompositeKey: []string{"idPd", "idHp"},
+		Relations:    []string{"phieuDat", "hangPhong"},
+	},
+	CTKhachO: {
+		Model:        CTKhachO,
+		CompositeKey: []string{"idCtpt", "cmnd"},
+		Relations:    []string{"ctPhieuThue", "khachHang"},
+	},
+	DoiPhong: {
+		Model:        DoiPhong,
+		CompositeKey: []string{"idCtpt", "soPhongMoi"},
+		Relations:    []string{"cTPhieuThue", "phongMoi"},
+	},
+	CTDichVu: {
+		Model:        CTDichVu,
+		CompositeKey: []string{"idCtpt", "idDv", "ngaySuDung"},
+		Relations:    []string{"cTPhieuThue", "dichVu", "hoaDon"},
+	},
+	CTPhuThu: {
+		Model:        CTPhuThu,
+		CompositeKey: []string{"idPt", "idCtpt"},
+		Relations:    []string{"phuThu", "cTPhieuThue", "hoaDon"},
+	},
+	GiaHangPhong: {
+		Model:        GiaHangPhong,
+		CompositeKey: []string{"idHp", "ngayApDung"},
+		Relations:    []string{"hangPhong", "nhanVien"},
+	},
+	GiaDichVu: {
+		Model:        GiaDichVu,
+		CompositeKey: []string{"idDv", "ngayApDung"},
+		Relations:    []string{"dichVu", "nhanVien"},
+	},
+	GiaPhuThu: {
+		Model:        GiaPhuThu,
+		CompositeKey: []string{"idPt", "ngayApDung"},
+		Relations:    []string{"phuThu", "nhanVien"},
+	},
 }
 
 func (g *Generator) Generate(request *GenerateRequest) error {
@@ -116,21 +251,16 @@ func (g *Generator) generateModel(model Model, basePath string) error {
 		return fmt.Errorf("model config not found for %s", model)
 	}
 
-	// Convert model name to kebab-case for URL
 	modelKebab := toKebabCase(string(model))
-
-	// Create directory structure
 	apiDir := filepath.Join(basePath, "app", "api", modelKebab)
 	if err := os.MkdirAll(apiDir, 0755); err != nil {
 		return err
 	}
 
-	// Generate main route file (GET all, POST)
 	if err := g.generateMainRoute(config, apiDir); err != nil {
 		return err
 	}
 
-	// Generate detail route only for models with single primary key
 	if config.PrimaryKey != "" {
 		paramName := config.RouteParam
 		detailDir := filepath.Join(apiDir, fmt.Sprintf("[%s]", paramName))
@@ -151,23 +281,27 @@ func (g *Generator) generateMainRoute(config ModelConfig, dir string) error {
 	g.sb.Reset()
 
 	modelCamel := toPrismaCamelCase(string(config.Model))
+	includeClause := g.generateIncludeClause(config.Relations)
 
-	g.sb.WriteString(fmt.Sprintf(`// this file is auto-generated by codegen
-// do not modify it directly
+	g.sb.WriteString(fmt.Sprintf(`// This file is auto-generated by codegen
+// Do not modify it directly
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // GET - Get list of %s
 export async function GET(request: NextRequest) {
   try {
-		const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(request.url)
     const idsParam = searchParams.get('ids')
 
-		const whereClause = idsParam
+    const whereClause = idsParam
       ? { id%s: { in: idsParam.split(',') } }
       : {}
 
-    const %ss = await prisma.%s.findMany({ where: whereClause })
+    const %ss = await prisma.%s.findMany({
+      where: whereClause,
+      %s
+    })
 
     return NextResponse.json({
       success: true,
@@ -189,6 +323,7 @@ export async function POST(request: NextRequest) {
 
     const new%s = await prisma.%s.create({
       data: body,
+      %s
     })
 
     return NextResponse.json(
@@ -203,8 +338,9 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-`, config.Model, toAbbreviation(string(config.Model)), modelCamel, modelCamel, modelCamel, modelCamel, config.Model,
-		config.Model, modelCamel, string(config.Model), string(config.Model)))
+`, config.Model, toAbbreviation(string(config.Model)), modelCamel, modelCamel, includeClause,
+		modelCamel, modelCamel, config.Model,
+		config.Model, modelCamel, includeClause, string(config.Model), config.Model))
 
 	filename := filepath.Join(dir, "route.ts")
 	return os.WriteFile(filename, []byte(g.sb.String()), 0644)
@@ -216,9 +352,10 @@ func (g *Generator) generateDetailRoute(config ModelConfig, dir string) error {
 	modelCamel := toPrismaCamelCase(string(config.Model))
 	paramName := config.RouteParam
 	pkField := config.PrimaryKey
+	includeClause := g.generateIncludeClause(config.Relations)
 
-	g.sb.WriteString(fmt.Sprintf(`// this file is auto-generated by codegen
-// do not modify it directly
+	g.sb.WriteString(fmt.Sprintf(`// This file is auto-generated by codegen
+// Do not modify it directly
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -232,6 +369,7 @@ export async function GET(
 
     const %s = await prisma.%s.findUnique({
       where: { %s: %s },
+      %s
     })
 
     if (!%s) {
@@ -266,6 +404,7 @@ export async function PUT(
     const updated%s = await prisma.%s.update({
       where: { %s: %s },
       data: body,
+      %s
     })
 
     return NextResponse.json({
@@ -305,9 +444,9 @@ export async function DELETE(
     )
   }
 }
-`, config.Model, pkField, paramName, paramName, modelCamel, modelCamel, pkField, paramName,
+`, config.Model, pkField, paramName, paramName, modelCamel, modelCamel, pkField, paramName, includeClause,
 		modelCamel, modelCamel, modelCamel,
-		config.Model, pkField, paramName, paramName, string(config.Model), modelCamel, pkField, paramName,
+		config.Model, pkField, paramName, paramName, string(config.Model), modelCamel, pkField, paramName, includeClause,
 		string(config.Model), config.Model,
 		config.Model, pkField, paramName, paramName, modelCamel, pkField, paramName, modelCamel))
 
@@ -315,36 +454,22 @@ export async function DELETE(
 	return os.WriteFile(filename, []byte(g.sb.String()), 0644)
 }
 
-// Helper functions
-func toKebabCase(s string) string {
-	var result strings.Builder
-	for i, r := range s {
-		if i > 0 && r >= 'A' && r <= 'Z' {
-			result.WriteRune('-')
-		}
-		result.WriteRune(r)
+func (g *Generator) generateIncludeClause(relations []string) string {
+	if len(relations) == 0 {
+		return ""
 	}
-	return strings.ToLower(result.String())
+
+	var includes []string
+	for _, rel := range relations {
+		includes = append(includes, fmt.Sprintf("        %s: true", rel))
+	}
+
+	return fmt.Sprintf(`include: {
+%s,
+      }`, strings.Join(includes, ",\n"))
 }
 
-// Convert to Prisma's camelCase naming
-// CTKhachO -> ctKhachO
-// KhachHang -> khachHang
-func toPrismaCamelCase(s string) string {
-	if len(s) == 0 {
-		return s
-	}
-
-	// Handle special cases like CT prefix
-	if strings.HasPrefix(s, "CT") && len(s) > 2 {
-		// CTKhachO -> ctKhachO
-		return "cT" + s[2:]
-	}
-
-	// Regular camelCase: KhachHang -> khachHang
-	return strings.ToLower(s[:1]) + s[1:]
-}
-
+// Service generation
 func (g *Generator) GenerateServices(request *GenerateRequest) error {
 	for _, model := range request.Models {
 		if err := g.generateService(model, request.Path); err != nil {
@@ -352,7 +477,6 @@ func (g *Generator) GenerateServices(request *GenerateRequest) error {
 		}
 	}
 
-	// Generate index file
 	if err := g.generateServicesIndex(request.Models, request.Path); err != nil {
 		return fmt.Errorf("failed to generate services index: %w", err)
 	}
@@ -366,7 +490,6 @@ func (g *Generator) generateService(model Model, basePath string) error {
 		return fmt.Errorf("model config not found for %s", model)
 	}
 
-	// Create services directory
 	servicesDir := filepath.Join(basePath, "lib", "services")
 	if err := os.MkdirAll(servicesDir, 0755); err != nil {
 		return err
@@ -376,14 +499,12 @@ func (g *Generator) generateService(model Model, basePath string) error {
 
 	modelKebab := toKebabCase(string(model))
 	typeName := string(model)
-	apiUrl := fmt.Sprintf("http://localhost:3000/api/%s", modelKebab)
 
-	// Import and type definition
-	g.sb.WriteString(fmt.Sprintf(`// this file is auto-generated by codegen
-// do not modify it directly
+	g.sb.WriteString(fmt.Sprintf(`// This file is auto-generated by codegen
+// Do not modify it directly
 import { %s } from '@/lib/generated/prisma'
 
-const API_URL = 'http://localhost:3000/api/%s'
+const API_URL = '/api/%s'
 
 export interface ApiResponse<T> {
   success: boolean
@@ -394,7 +515,7 @@ export interface ApiResponse<T> {
 
 `, typeName, modelKebab))
 
-	// GET list function
+	// GET list
 	g.sb.WriteString(fmt.Sprintf(`// Get list of %s
 export async function getList%s(): Promise<ApiResponse<%s[]>> {
   try {
@@ -410,11 +531,11 @@ export async function getList%s(): Promise<ApiResponse<%s[]>> {
 
 `, typeName, typeName, typeName))
 
-	// Get list by ids
+	// GET list by IDs
 	g.sb.WriteString(fmt.Sprintf(`// Get list of %s by ids
 export async function getList%sByIds(ids: string[]): Promise<ApiResponse<%s[]>> {
   try {
-    const response = await fetch(API_URL + '?ids=' + ids.join(','))
+    const response = await fetch(`+"`${API_URL}?ids=${ids.join(',')}`"+`)
     return await response.json()
   } catch (error) {
     return {
@@ -426,16 +547,15 @@ export async function getList%sByIds(ids: string[]): Promise<ApiResponse<%s[]>> 
 
 `, typeName, typeName, typeName))
 
-	// If model has single primary key, generate detail functions
+	// Detail functions for single PK models
 	if config.PrimaryKey != "" {
-		pkField := config.PrimaryKey
 		routeParam := config.RouteParam
 
 		// GET by ID
 		g.sb.WriteString(fmt.Sprintf(`// Get %s by %s
 export async function get%s(%s: string): Promise<ApiResponse<%s>> {
   try {
-    const response = await fetch(`+"`%s/${%s}`"+`)
+    const response = await fetch(`+"`${API_URL}/${%s}`"+`)
     return await response.json()
   } catch (error) {
     return {
@@ -444,7 +564,8 @@ export async function get%s(%s: string): Promise<ApiResponse<%s>> {
     }
   }
 }
-`, typeName, pkField, typeName, routeParam, typeName, apiUrl, routeParam))
+
+`, typeName, config.PrimaryKey, typeName, routeParam, typeName, routeParam))
 
 		// UPDATE
 		g.sb.WriteString(fmt.Sprintf(`// Update %s
@@ -453,7 +574,7 @@ export async function update%s(
   data: Partial<Omit<%s, '%s'>>
 ): Promise<ApiResponse<%s>> {
   try {
-    const response = await fetch(`+"`%s/${%s}`"+`, {
+    const response = await fetch(`+"`${API_URL}/${%s}`"+`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -467,13 +588,13 @@ export async function update%s(
   }
 }
 
-`, typeName, typeName, routeParam, typeName, pkField, typeName, apiUrl, routeParam))
+`, typeName, typeName, routeParam, typeName, config.PrimaryKey, typeName, routeParam))
 
 		// DELETE
 		g.sb.WriteString(fmt.Sprintf(`// Delete %s
 export async function delete%s(%s: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`+"`%s/${%s}`"+`, {
+    const response = await fetch(`+"`${API_URL}/${%s}`"+`, {
       method: 'DELETE',
     })
     return await response.json()
@@ -485,10 +606,10 @@ export async function delete%s(%s: string): Promise<ApiResponse<void>> {
   }
 }
 
-`, typeName, typeName, routeParam, apiUrl, routeParam))
+`, typeName, typeName, routeParam, routeParam))
 	}
 
-	// CREATE function
+	// CREATE
 	g.sb.WriteString(fmt.Sprintf(`// Create new %s
 export async function create%s(
   data: Omit<%s, %s>
@@ -544,7 +665,6 @@ func getOmitFields(config ModelConfig) string {
 		return fmt.Sprintf("'%s'", config.PrimaryKey)
 	}
 
-	// For composite keys, omit all key fields
 	if len(config.CompositeKey) > 0 {
 		fields := make([]string, len(config.CompositeKey))
 		for i, field := range config.CompositeKey {
@@ -554,6 +674,30 @@ func getOmitFields(config ModelConfig) string {
 	}
 
 	return "'id'"
+}
+
+// Helper functions
+func toKebabCase(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			result.WriteRune('-')
+		}
+		result.WriteRune(r)
+	}
+	return strings.ToLower(result.String())
+}
+
+func toPrismaCamelCase(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+
+	if strings.HasPrefix(s, "CT") && len(s) > 2 {
+		return "cT" + s[2:]
+	}
+
+	return strings.ToLower(s[:1]) + s[1:]
 }
 
 func toAbbreviation(str string) string {

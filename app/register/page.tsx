@@ -7,10 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useMutation } from "@tanstack/react-query"
 import { Mail, Phone, Lock, User, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { createKhachHang } from "@/lib/services"
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [emailData, setEmailData] = useState({
     name: "",
     email: "",
@@ -25,14 +29,44 @@ export default function RegisterPage() {
     confirmPassword: "",
   })
 
+  const createKhachHangMutation = useMutation({
+    mutationFn: createKhachHang,
+    onSuccess: () => {
+      alert("Đăng ký thành công!")
+      router.push("/login")
+    },
+    onError: (error: any) => {
+      alert(`Đăng ký thất bại: ${error.response?.data?.message || error.message}`)
+    },
+  })
+
+  const handleRegister = (data: { name: string; password: string; email?: string; phone?: string }) => {
+    const parts = data.name.trim().split(" ")
+    const ten = parts.pop() || ""
+    const ho = parts.join(" ")
+
+    // CCCD is required as ID, using a random string or phone/email for now.
+    // This should be handled properly based on business logic.
+    const cccd = data.phone || data.email || `KH${Date.now()}`
+
+    createKhachHangMutation.mutate({
+      //@ts-ignore
+      cccd,
+      ho,
+      ten,
+      email: data.email || null,
+      sdt: data.phone || null,
+      matKhau: data.password,
+    })
+  }
+
   const handleEmailRegister = (e: React.FormEvent) => {
     e.preventDefault()
     if (emailData.password !== emailData.confirmPassword) {
       alert("Mật khẩu không khớp!")
       return
     }
-    console.log("[v0] Email register:", emailData)
-    // Handle email registration logic here
+    handleRegister({ ...emailData })
   }
 
   const handlePhoneRegister = (e: React.FormEvent) => {
@@ -41,8 +75,7 @@ export default function RegisterPage() {
       alert("Mật khẩu không khớp!")
       return
     }
-    console.log("[v0] Phone register:", phoneData)
-    // Handle phone registration logic here
+    handleRegister({ ...phoneData })
   }
 
   return (
