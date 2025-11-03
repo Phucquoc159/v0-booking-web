@@ -2,7 +2,6 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  output   = "../lib/generated/prisma"
   provider = "prisma-client-js"
 }
 

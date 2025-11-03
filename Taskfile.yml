@@ -5,6 +5,10 @@ tasks:
     cmds:
       - docker compose up -d
 
+  down:
+    cmds:
+      - docker compose down
+
   build:
     cmds:
       - docker compose up --build
