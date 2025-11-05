@@ -34,7 +34,7 @@ export type HangPhongWithRelations = WithRelations<HangPhong, {
   anhHangPhongs: AnhHangPhong[]
   phongs: PhongWithRelations[]
   ctTienNghis: CTTienNghiWithRelations[]
-  ctKhuyenMais: CTTienNghiWithRelations[]
+  ctKhuyenMais: CTKhuyenMaiWithRelations[]
   ctPhieuDats: CTPhieuDat[]
 }>
 
