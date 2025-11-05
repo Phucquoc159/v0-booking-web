@@ -12,7 +12,7 @@ const JWT_SECRET = new TextEncoder().encode(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { username, password } = body
+    const { username, password, type } = body
 
     if (!username || !password) {
       return NextResponse.json(

@@ -20,6 +20,8 @@ export async function GET(
         anhHangPhongs: true,
         phongs: true,
         ctTienNghis: true,
+        ctKhuyenMais: true,
+        ctPhieuDats: true,
       }
     })
 
@@ -62,6 +64,8 @@ export async function PUT(
         anhHangPhongs: true,
         phongs: true,
         ctTienNghis: true,
+        ctKhuyenMais: true,
+        ctPhieuDats: true,
       }
     })
 

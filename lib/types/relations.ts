@@ -9,8 +9,10 @@ import type {
   LoaiPhong,
   PhieuThue,
   Phong,
-  TrangThai
+  TrangThai,
+  TienNghi
 } from '@/lib/generated/prisma'
+import { AnhHangPhong, CTKhuyenMai, CTTienNghi, GiaHangPhong } from '@prisma/client'
 
 export type WithRelations<T, Relations> = T & Relations
 
@@ -28,6 +30,25 @@ export type CTPhieuDatWithRelations = WithRelations<CTPhieuDat, {
 export type HangPhongWithRelations = WithRelations<HangPhong, {
   kieuPhong: KieuPhong
   loaiPhong: LoaiPhong
+  giaHangPhongs: GiaHangPhong[]
+  anhHangPhongs: AnhHangPhong[]
+  phongs: PhongWithRelations[]
+  ctTienNghis: CTTienNghiWithRelations[]
+  ctKhuyenMais: CTTienNghiWithRelations[]
+  ctPhieuDats: CTPhieuDat[]
+}>
+
+export type CTKhuyenMaiWithRelations = WithRelations<CTKhuyenMai, {
+  hangPhong: HangPhongWithRelations
+}>
+
+export type TienNghiWithRelations = WithRelations<TienNghi, {
+  ctTienNghis: CTTienNghiWithRelations[]
+}>
+
+export type CTTienNghiWithRelations = WithRelations<CTTienNghi, {
+  tienNghi: TienNghiWithRelations
+  hangPhong: HangPhongWithRelations
 }>
 
 export type PhongWithRelations = WithRelations<Phong, {

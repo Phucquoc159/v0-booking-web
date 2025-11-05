@@ -5,3 +5,9 @@ export const PHAI = {
   NAM: 'Nam',
   NU: 'Nữ'
 }
+
+
+export const authType = {
+  NhanVien: 'NhanVien',
+  KhachHang: 'KhachHang',
+}

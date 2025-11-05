@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
         anhHangPhongs: true,
         phongs: true,
         ctTienNghis: true,
+        ctKhuyenMais: true,
+        ctPhieuDats: true,
       }
     })
 
@@ -52,6 +54,8 @@ export async function POST(request: NextRequest) {
         anhHangPhongs: true,
         phongs: true,
         ctTienNghis: true,
+        ctKhuyenMais: true,
+        ctPhieuDats: true,
       }
     })
 

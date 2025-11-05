@@ -103,7 +103,7 @@ var modelConfigs = map[Model]ModelConfig{
 		Model:      HangPhong,
 		PrimaryKey: "idHp",
 		RouteParam: "id",
-		Relations:  []string{"kieuPhong", "loaiPhong", "giaHangPhongs", "anhHangPhongs", "phongs", "ctTienNghis"},
+		Relations:  []string{"kieuPhong", "loaiPhong", "giaHangPhongs", "anhHangPhongs", "phongs", "ctTienNghis", "ctKhuyenMais", "ctPhieuDats"},
 	},
 	AnhHangPhong: {
 		Model:      AnhHangPhong,
@@ -802,6 +802,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { SignJWT } from 'jose'
+import { }
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key'
@@ -810,7 +811,7 @@ const JWT_SECRET = new TextEncoder().encode(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { username, password } = body
+    const { username, password, type } = body
 
     if (!username || !password) {
       return NextResponse.json(
