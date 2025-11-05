@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QK Hotel - Chatbot Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Demo Container */
+        .demo-container {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .demo-container h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .demo-container p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Chat Button */
+        .chat-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: #A52A2A;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .chat-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+        }
+
+        .chat-button svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+
+        .chat-button.active {
+            background: #666;
+        }
+
+        /* Chat Widget */
+        .chat-widget {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 999;
+            animation: slideUp 0.3s ease;
+        }
+
+        .chat-widget.open {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Chat Header */
+        .chat-header {
+            background: #A52A2A;
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .chat-header-text h3 {
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+
+        .chat-header-text p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+        }
+
+        .close-button:hover {
+            opacity: 0.8;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            background: #A52A2A;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 15px;
+            max-width: 70%;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .message.user .message-content {
+            background: #A52A2A;
+            color: white;
+        }
+
+        /* Quick Replies */
+        .quick-replies {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .quick-reply-button {
+            display: block;
+            width: 100%;
+            background: white;
+            border: 2px solid #A52A2A;
+            color: #A52A2A;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .quick-reply-button:last-child {
+            margin-bottom: 0;
+        }
+
+        .quick-reply-button:hover {
+            background: #A52A2A;
+            color: white;
+        }
+
+        /* Chat Input */
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input input:focus {
+            border-color: #A52A2A;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            background: #A52A2A;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .send-button:hover {
+            background: #8B2020;
+        }
+
+        .send-button svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 15px;
+            width: fit-content;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+            margin-right: 0;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .chat-widget {
+                width: calc(100vw - 20px);
+                height: calc(100vh - 120px);
+                right: 10px;
+                bottom: 80px;
+            }
+
+            .chat-button {
+                right: 20px;
+                bottom: 20px;
+            }
+        }
+
+        /* Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #A52A2A;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="demo-container">
+        <h1>🏨 QK Hotel</h1>
+        <p>Click vào nút chat góc phải để bắt đầu trò chuyện</p>
+    </div>
+
+    <!-- Chat Button -->
+    <div class="chat-button" id="chatButton">
+        <svg viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>
+    </div>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chatWidget">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-header-avatar">🏨</div>
+                <div class="chat-header-text">
+                    <h3>QK Hotel Support</h3>
+                    <p>Trực tuyến</p>
+                </div>
+            </div>
+            <button class="close-button" id="closeButton">×</button>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-avatar">🏨</div>
+                <div class="message-content">
+                    Xin chào! Tôi là trợ lý ảo của QK Hotel. Tôi có thể giúp gì cho bạn?
+                </div>
+            </div>
+            
+            <div class="message bot">
+                <div class="message-avatar">🏨</div>
+                <div class="message-content">
+                    Cảm ơn bạn đã liên hệ! Nhân viên của chúng tôi sẽ phản hồi trong giây lát. Hoặc bạn có thể gọi hotline: +84 123 456 789
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Replies -->
+        <div class="quick-replies" id="quickReplies">
+            <button class="quick-reply-button" data-reply="giá phòng">💰 Xem giá phòng</button>
+            <button class="quick-reply-button" data-reply="đặt phòng">📅 Đặt phòng</button>
+            <button class="quick-reply-button" data-reply="dịch vụ">✨ Dịch vụ khách sạn</button>
+            <button class="quick-reply-button" data-reply="liên hệ">📞 Thông tin liên hệ</button>
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Nhập tin nhắn...">
+            <button class="send-button" id="sendButton">
+                <svg viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const chatButton = document.getElementById('chatButton');
+        const chatWidget = document.getElementById('chatWidget');
+        const closeButton = document.getElementById('closeButton');
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const quickReplies = document.getElementById('quickReplies');
+
+        // Bot responses
+        const botResponses = {
+            'giá phòng': [
+                'Giá phòng tại QK Hotel:',
+                '🛏️ Standard Room: 500.000đ - 800.000đ/đêm',
+                '🛏️ Deluxe Room: 900.000đ - 1.500.000đ/đêm',
+                '🛏️ Suite Room: 1.600.000đ - 2.000.000đ/đêm',
+                '',
+                'Bạn muốn đặt phòng loại nào?'
+            ].join('\n'),
+            
+            'đặt phòng': [
+                'Để đặt phòng, vui lòng cung cấp thông tin:',
+                '📅 Ngày nhận phòng',
+                '📅 Ngày trả phòng',
+                '👥 Số lượng khách',
+                '🛏️ Loại phòng mong muốn',
+                '',
+                'Hoặc gọi hotline: +84 123 456 789 để đặt phòng nhanh hơn!'
+            ].join('\n'),
+            
+            'dịch vụ': [
+                'Dịch vụ tại QK Hotel:',
+                '🏊‍♂️ Bể bơi ngoài trời',
+                '🍽️ Nhà hàng & Bar cao cấp',
+                '💪 Phòng gym 24/7',
+                '💆‍♀️ Spa & Massage',
+                '🚗 Đưa đón sân bay',
+                '🅿️ Bãi đậu xe miễn phí',
+                '📶 WiFi tốc độ cao',
+                '🧹 Dọn phòng hàng ngày'
+            ].join('\n'),
+            
+            'liên hệ': [
+                'Thông tin liên hệ QK Hotel:',
+                '📞 Hotline: +84 123 456 789',
+                '📧 Email: info@qkhotel.com',
+                '📍 Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM',
+                '🕐 Giờ làm việc: 24/7',
+                '',
+                'Chúng tôi luôn sẵn sàng phục vụ bạn!'
+            ].join('\n'),
+            
+            'default': 'Cảm ơn bạn đã liên hệ! Một nhân viên sẽ phản hồi trong giây lát. Hoặc bạn có thể chọn các tùy chọn bên dưới để được hỗ trợ nhanh hơn.'
+        };
+
+        // Toggle chat widget
+        chatButton.addEventListener('click', () => {
+            chatWidget.classList.toggle('open');
+            chatButton.classList.toggle('active');
+            if (chatWidget.classList.contains('open')) {
+                messageInput.focus();
+            }
+        });
+
+        closeButton.addEventListener('click', () => {
+            chatWidget.classList.remove('open');
+            chatButton.classList.remove('active');
+        });
+
+        // Add message to chat
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            if (!isUser) {
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = '🏨';
+                messageDiv.appendChild(avatar);
+            }
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = text;
+            messageDiv.appendChild(content);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = '🏨';
+            typingDiv.appendChild(avatar);
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator active';
+            indicator.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+            typingDiv.appendChild(indicator);
+            
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Get bot response
+        function getBotResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            for (const [key, response] of Object.entries(botResponses)) {
+                if (key !== 'default' && lowerMessage.includes(key)) {
+                    return response;
+                }
+            }
+            
+            return botResponses.default;
+        }
+
+        // Send message
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (message === '') return;
+            
+            // Add user message
+            addMessage(message, true);
+            messageInput.value = '';
+            
+            // Hide quick replies after first user message
+            quickReplies.style.display = 'none';
+            
+            // Show typing indicator
+            showTyping();
+            
+            // Simulate bot response delay
+            setTimeout(() => {
+                hideTyping();
+                const response = getBotResponse(message);
+                addMessage(response);
+            }, 1000);
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Quick reply buttons
+        document.querySelectorAll('.quick-reply-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const reply = button.getAttribute('data-reply');
+                addMessage(reply, true);
+                quickReplies.style.display = 'none';
+                
+                showTyping();
+                setTimeout(() => {
+                    hideTyping();
+                    const response = getBotResponse(reply);
+                    addMessage(response);
+                }, 1000);
+            });
+        });
+
+        // Auto open chat after 3 seconds (optional)
+        setTimeout(() => {
+            if (!chatWidget.classList.contains('open')) {
+                // Uncomment the line below to auto-open chat
+                // chatButton.click();
+            }
+        }, 3000);
+    </script>
+
+</body>
+</html>
