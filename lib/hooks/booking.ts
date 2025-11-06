@@ -1,8 +1,9 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { getListPhieuDat } from '@/lib/services'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { createPhieuDat, getListPhieuDat } from '@/lib/services'
 import type { PhieuDatFull } from '@/lib/types/relations'
+import { PhieuDat } from '@prisma/client'
 
 export function useBookings() {
   const { data } =  useQuery({
@@ -16,4 +17,10 @@ export function useBookings() {
   }
 }
 
+export function useCreateBooking() {
+  return useMutation({
+    mutationKey: ["create-booking"],
+    mutationFn: (phieuDat: Omit<PhieuDat, "idPd">) => createPhieuDat(phieuDat),
+  })
+}
 

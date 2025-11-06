@@ -6,10 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
-
-# Copy project files
-COPY . .
+RUN npm install -g pnpm
+RUN pnpm install
 
 # Expose port
 EXPOSE 3000

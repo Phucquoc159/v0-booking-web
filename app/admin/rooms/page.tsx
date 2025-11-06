@@ -18,6 +18,13 @@ import {
 import { Label } from "@/components/ui/label"
 import { Search, Plus, Edit, Trash2, Grid3x3, List } from "lucide-react"
 import { useRooms } from "@/lib/hooks/room"
+import { useMutation } from "@tanstack/react-query"
+import { createPhong } from "@/lib/services"
+import { Phong } from "@prisma/client"
+import RoomHeader from "./header/page"
+import RoomStatsPage from "./stats/page"
+import { useRoomClasses } from "@/lib/hooks/roomClass"
+import { useRoomTypes } from "@/lib/hooks/roomTypes"
 
 // Mock data
 const statusConfig = {
@@ -32,16 +39,24 @@ export default function RoomsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterFloor, setFilterFloor] = useState<string>("all")
+  const [phong, setPhong] = useState<Phong>({
+    soPhong: "",
+    tang: 0,
+    idHp: "HP01", //TODO: remove hardcode
+    idTt: "TT01", //TODO: remove hardcode
+  })
 
-  const { rooms, isLoading, isError, error } = useRooms()
+  const { rooms, isLoading, isError } = useRooms()
 
-  const roomClasses = rooms
-    ? Array.from(new Map(rooms.map(room => [room.hangPhong.idHp, room.hangPhong])).values())
-    : []
+  console.log({ rooms })
 
-  const roomTypes = rooms
-    ? Array.from(new Map(rooms.map(room => [room.hangPhong.loaiPhong.idLp, room.hangPhong.loaiPhong])).values())
-    : []
+  const createRoomMutation = useMutation({
+    mutationFn: createPhong,
+  })
+
+  const rc = useRoomClasses()
+
+  const rt = useRoomTypes()
 
   const filteredRooms = rooms?.filter((room) => {
     if (filterStatus !== "all" && room.trangThai.tenTrangThai.toLowerCase() !== filterStatus) return false
@@ -52,68 +67,17 @@ export default function RoomsPage() {
   if (isLoading) return <div>Loading...</div>
   if (isError) return <div>Error loading rooms</div>
 
+  const createRoom = () => {
+    createRoomMutation.mutate(phong)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Quản Lý Phòng</h1>
-          <p className="text-gray-400">Quản lý trạng thái và thông tin phòng khách sạn</p>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              Thêm Phòng
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
-            <DialogHeader>
-              <DialogTitle>Thêm Phòng Mới</DialogTitle>
-              <DialogDescription className="text-gray-400">Nhập thông tin phòng mới</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Số Phòng</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="101" />
-              </div>
-              <div>
-                <Label>Tầng</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="number" placeholder="1" />
-              </div>
-              <div>
-                <Label>Loại Phòng</Label>
-                <Select>
-                  <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
-                    <SelectValue placeholder="Chọn loại phòng" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
-                    {roomClasses?.map((type) => (
-                      <SelectItem key={type.idHp} value={type.idHp}>
-                        {type.loaiPhong.tenLp} - {type.kieuPhong.tenKp}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">Thêm Phòng</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+      <RoomHeader roomClasses={rc.roomClasses} phong={phong} createRoom={createRoom} setPhong={setPhong} />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {Object.entries(statusConfig).map(([status, config]) => {
-          const count = rooms?.filter((r) => r.trangThai.tenTrangThai.toLowerCase() === status).length
-          return (
-            <Card key={status} className="bg-[#1a1a1a] border-[#2a2a2a] p-4">
-              <p className="text-gray-400 text-sm mb-1">{config.label}</p>
-              <p className="text-2xl font-bold text-white">{count}</p>
-            </Card>
-          )
-        })}
-      </div>
+      <RoomStatsPage rooms={rooms} />
 
       {/* Tabs */}
       <Tabs defaultValue="rooms" className="space-y-6">
@@ -194,7 +158,7 @@ export default function RoomsPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-2xl font-bold text-white">{room.soPhong}</p>
-                        <p className="text-sm text-gray-400">{room.hangPhong.loaiPhong.tenLp}</p>
+                        <p className="text-sm text-gray-400">{rt.roomTypes?.find(rt => rt.idLp === room.hangPhong.idLp)?.tenLp}</p>
                       </div>
                       <Badge className={statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.color}>
                         {statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.label}
@@ -276,13 +240,13 @@ export default function RoomsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {roomTypes?.map((type) => {
+                  {rt.roomTypes?.map((type) => {
                     const roomCount = rooms?.filter((r) => r.hangPhong.idLp === type.idLp).length
                     return (
                       <tr key={type.idLp} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
                         <td className="p-4 text-white font-semibold">{type.tenLp}</td>
-                        <td className="p-4 text-gray-400">{roomClasses.find(rc => rc.idLp === type.idLp)?.kieuPhong.tenKp}</td>
-                        <td className="p-4 text-gray-400">{roomClasses.find(rc => rc.idLp === type.idLp)?.kieuPhong.soLuongKhach} người</td>
+                        <td className="p-4 text-gray-400">{rc.roomClasses.find(rc => rc.idLp === type.idLp)?.kieuPhong.tenKp}</td>
+                        <td className="p-4 text-gray-400">{rc.roomClasses.find(rc => rc.idLp === type.idLp)?.kieuPhong.soLuongKhach} người</td>
                         <td className="p-4 text-white">{5}₫</td> //TODO: get price from database
                         <td className="p-4 text-gray-400">{roomCount} phòng</td>
                         <td className="p-4">

@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma'
+import { ApiResponse } from '../services';
+import { Phong } from '@prisma/client';
 
 // Định nghĩa kiểu dữ liệu cho phòng đã đặt
 type BookedRoom = {
@@ -156,5 +158,28 @@ export async function getRoomDetail(roomId: string) {
   } catch (error) {
     console.error('Lỗi khi lấy thông tin phòng:', error);
     throw error;
+  }
+}
+
+const API_URL = '/api/phong'
+
+export async function searchPhong(
+  fromDate: Date,
+  toDate: Date,
+  guestCount: number
+): Promise<ApiResponse<Phong[]>> {
+  try {
+    const params = new URLSearchParams({
+      fromDate: fromDate.toISOString(),
+      toDate: toDate.toISOString(),
+      guestCount: guestCount.toString(),
+    })
+    const response = await fetch(`${API_URL}/search?${params}`)
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
   }
 }

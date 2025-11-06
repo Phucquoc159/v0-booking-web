@@ -35,9 +35,25 @@ export function useRoom(id: string) {
 
   const hp = hangPhong?.data as HangPhongWithRelations || {} as HangPhongWithRelations
 
-  const roomAmenities: RoomAmenity[] = []
+  const roomAmenities: RoomAmenity[] = room.hangPhong.phongs.map((phong) => {
+    const item: RoomAmenity = {
+      name: phong.soPhong,
+      description: phong.tang.toString(),
+    } as RoomAmenity
 
-  const roomPromotions: RoomPromotion[] = []
+    return item
+  })
+
+  const roomPromotions: RoomPromotion[] = room.hangPhong.phongs.map((phong) => {
+    const item: RoomPromotion = {
+      color: "#FF0000",
+      title: phong.soPhong,
+      description: phong.tang.toString(),
+      discount: "10%",
+    } as RoomPromotion
+
+    return item
+  })
 
   const res: Room = {
     id: room.idHp,

@@ -66,3 +66,7 @@ export type NhanVienFull = WithRelations<NhanVien, {
     tenNc: string
   }
 }>
+
+export type LoaiPhongWithRelations = WithRelations<LoaiPhong, {
+  hangPhongs: HangPhongWithRelations[]
+}>

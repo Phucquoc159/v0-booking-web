@@ -18,7 +18,9 @@ import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Eye, Edit, X } from "lucide-react"
-import { useBookings } from "@/lib/hooks/booking"
+import { useBookings, useCreateBooking } from "@/lib/hooks/booking"
+import { PhieuDat } from "@prisma/client"
+import { Decimal } from "@prisma/client/runtime/library"
 
 const statusConfig = {
   pending: { label: "Chờ Xác Nhận", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
@@ -31,8 +33,22 @@ const statusConfig = {
 export default function BookingsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  const [phieuDat, setPhieudat] = useState<Omit<PhieuDat, "idPd">>({
+    ngayDat: new Date(),
+    ngayBdThue: new Date(),
+    ngayDi: new Date(),
+    trangThai: "pending",
+    soTienCoc: Decimal(50000),
+    cccd: "1234567890123",
+    idNv: "nv123",
+  })
 
-  const { bookings } = useBookings()
+const { bookings } = useBookings()
+  const createBookingMutation = useCreateBooking()
+
+  const handleCreateBooking = () => {
+    createBookingMutation.mutate(phieuDat)
+  }
 
   const filteredBookings = bookings?.filter((booking) => {
     if (filterStatus !== "all" && booking.trangThai !== filterStatus) return false
@@ -65,15 +81,28 @@ export default function BookingsPage() {
               </div>
               <div>
                 <Label>Họ Tên</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="Nguyễn Văn A" />
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="Nguyễn Văn A"
+                  // This is a placeholder for customer name, assuming cccd is the customer identifier
+                />
               </div>
               <div>
                 <Label>Số Điện Thoại</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="0901234567" />
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="0901234567"
+                  // This is a placeholder for customer phone
+                />
               </div>
               <div className="col-span-2">
                 <Label>Email</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="email@example.com" />
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="CCCD"
+                  value={phieuDat.cccd}
+                  onChange={(e) => setPhieudat({ ...phieuDat, cccd: e.target.value })}
+                />
               </div>
               <div className="col-span-2 border-t border-[#2a2a2a] pt-4 mt-2">
                 <Label>Thông Tin Phòng</Label>
@@ -110,7 +139,9 @@ export default function BookingsPage() {
                 <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="Ghi chú đặc biệt..." />
               </div>
               <div className="col-span-2">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">Tạo Đặt Phòng</Button>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleCreateBooking}>
+                  Tạo Đặt Phòng
+                </Button>
               </div>
             </div>
           </DialogContent>

@@ -37,7 +37,6 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/.next
 
 volumes:
   postgres_data:
