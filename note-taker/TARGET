@@ -1,0 +1,10 @@
+1. Có thể tạo phòng, tìm phòng, đặt phòng:
+  * Hiện tại:
+    - Tạo phòng: OK -> hard code 1 phần
+    - Tìm phòng: Implementing API -> NOT OK
+    - Đặt phòng: Implementing API -> NOT OK
+
+2. Có thể tạo nhân viên, đăng nhập bằng nhân viên:
+  * Hiện tại:
+    - Tạo nhân viên: OK -> hard code 1 phần
+    - Đăng nhập bằng nhân viên: Implementing API -> Đang lỗi
