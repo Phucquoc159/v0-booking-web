@@ -1,20 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to alter the column `TEN_BP` on the `bo_phan` table. The data in that column could be lost. The data in that column will be cast from `VarChar(100)` to `VarChar(50)`.
-  - You are about to drop the column `TEN_NQ` on the `nhom_quyen` table. All the data in the column will be lost.
-  - Made the column `TEN_BP` on table `bo_phan` required. This step will fail if there are existing NULL values in that column.
-  - Added the required column `TEN_NC` to the `nhom_quyen` table without a default value. This is not possible if the table is not empty.
-
-*/
--- AlterTable
-ALTER TABLE "bo_phan" ALTER COLUMN "TEN_BP" SET NOT NULL,
-ALTER COLUMN "TEN_BP" SET DATA TYPE VARCHAR(50);
-
--- AlterTable
-ALTER TABLE "nhom_quyen" DROP COLUMN "TEN_NQ",
-ADD COLUMN     "TEN_NC" VARCHAR(50) NOT NULL;
-
 -- CreateTable
 CREATE TABLE "khach_hang" (
     "CCCD" VARCHAR(20) NOT NULL,
@@ -27,6 +10,41 @@ CREATE TABLE "khach_hang" (
     "MAT_KHAU" VARCHAR(255),
 
     CONSTRAINT "khach_hang_pkey" PRIMARY KEY ("CCCD")
+);
+
+-- CreateTable
+CREATE TABLE "bo_phan" (
+    "ID_BP" VARCHAR(10) NOT NULL,
+    "TEN_BP" VARCHAR(50) NOT NULL,
+
+    CONSTRAINT "bo_phan_pkey" PRIMARY KEY ("ID_BP")
+);
+
+-- CreateTable
+CREATE TABLE "nhom_quyen" (
+    "ID_NQ" VARCHAR(10) NOT NULL,
+    "TEN_NC" VARCHAR(50) NOT NULL,
+
+    CONSTRAINT "nhom_quyen_pkey" PRIMARY KEY ("ID_NQ")
+);
+
+-- CreateTable
+CREATE TABLE "nhan_vien" (
+    "ID_NV" VARCHAR(10) NOT NULL,
+    "HO" VARCHAR(50) NOT NULL,
+    "TEN" VARCHAR(10) NOT NULL,
+    "PHAI" VARCHAR(10),
+    "NGAY_SINH" DATE,
+    "DIA_CHI" VARCHAR(100),
+    "SDT" VARCHAR(15) NOT NULL,
+    "EMAIL" VARCHAR(50) NOT NULL,
+    "HINH" VARCHAR(100),
+    "USERNAME" VARCHAR(50) NOT NULL,
+    "PASSWORD" VARCHAR(255) NOT NULL,
+    "ID_BP" VARCHAR(10) NOT NULL,
+    "ID_NQ" VARCHAR(10) NOT NULL,
+
+    CONSTRAINT "nhan_vien_pkey" PRIMARY KEY ("ID_NV")
 );
 
 -- CreateTable
@@ -206,11 +224,11 @@ CREATE TABLE "ct_phieu_thue" (
 );
 
 -- CreateTable
-CREATE TABLE "ctkhacho" (
+CREATE TABLE "ct_khach_o" (
     "ID_CT_PT" INTEGER NOT NULL,
     "CMND" VARCHAR(20) NOT NULL,
 
-    CONSTRAINT "ctkhacho_pkey" PRIMARY KEY ("ID_CT_PT","CMND")
+    CONSTRAINT "ct_khach_o_pkey" PRIMARY KEY ("ID_CT_PT","CMND")
 );
 
 -- CreateTable
@@ -291,6 +309,18 @@ CREATE TABLE "ct_phu_thu" (
 -- CreateIndex
 CREATE UNIQUE INDEX "khach_hang_EMAIL_key" ON "khach_hang"("EMAIL");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "nhan_vien_EMAIL_key" ON "nhan_vien"("EMAIL");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "nhan_vien_USERNAME_key" ON "nhan_vien"("USERNAME");
+
+-- AddForeignKey
+ALTER TABLE "nhan_vien" ADD CONSTRAINT "nhan_vien_ID_BP_fkey" FOREIGN KEY ("ID_BP") REFERENCES "bo_phan"("ID_BP") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "nhan_vien" ADD CONSTRAINT "nhan_vien_ID_NQ_fkey" FOREIGN KEY ("ID_NQ") REFERENCES "nhom_quyen"("ID_NQ") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE "quan_ly" ADD CONSTRAINT "quan_ly_ID_BP_fkey" FOREIGN KEY ("ID_BP") REFERENCES "bo_phan"("ID_BP") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -367,10 +397,10 @@ ALTER TABLE "ct_phieu_thue" ADD CONSTRAINT "ct_phieu_thue_SO_PHONG_fkey" FOREIGN
 ALTER TABLE "ct_phieu_thue" ADD CONSTRAINT "ct_phieu_thue_ID_HD_fkey" FOREIGN KEY ("ID_HD") REFERENCES "hoa_don"("ID_HD") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ctkhacho" ADD CONSTRAINT "ctkhacho_ID_CT_PT_fkey" FOREIGN KEY ("ID_CT_PT") REFERENCES "ct_phieu_thue"("ID_CT_PT") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ct_khach_o" ADD CONSTRAINT "ct_khach_o_ID_CT_PT_fkey" FOREIGN KEY ("ID_CT_PT") REFERENCES "ct_phieu_thue"("ID_CT_PT") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ctkhacho" ADD CONSTRAINT "ctkhacho_CMND_fkey" FOREIGN KEY ("CMND") REFERENCES "khach_hang"("CCCD") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ct_khach_o" ADD CONSTRAINT "ct_khach_o_CMND_fkey" FOREIGN KEY ("CMND") REFERENCES "khach_hang"("CCCD") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "doiphong" ADD CONSTRAINT "doiphong_ID_CT_PT_fkey" FOREIGN KEY ("ID_CT_PT") REFERENCES "ct_phieu_thue"("ID_CT_PT") ON DELETE RESTRICT ON UPDATE CASCADE;

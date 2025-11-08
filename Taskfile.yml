@@ -23,6 +23,7 @@ tasks:
       - task: up
       - echo "Waiting for the database to be ready..."
       - sleep 5
-      - docker compose exec nextjs npx prisma generate
+      - docker compose exec -T nextjs npx prisma migrate dev --name init_hotel_schema
+      - docker compose exec -it nextjs npx prisma generate
       - echo "Seeding database..."
-      - cat testdata/nextjs_db.sql | docker compose exec -T db psql -U postgres -d nextjs_db
+      - cat testdata/nextjs_db.sql | docker compose exec -T postgres psql -U postgres -d nextjs_db

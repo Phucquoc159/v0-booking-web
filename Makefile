@@ -42,10 +42,12 @@ init: build up
 
 # Run database migrations and generate Prisma client
 migrate:
+	@echo "Running database migrations..."
+	docker compose exec -T nextjs npx prisma migrate dev --name init_hotel_schema
 	@echo "Generating Prisma client..."
-	docker compose exec nextjs npx prisma generate
+	docker compose exec -it nextjs npx prisma generate
 
 # Seed the database with initial data
 seed:
 	@echo "Seeding database..."
-	cat testdata/nextjs_db.sql | docker compose exec -T db psql -U postgres -d nextjs_db
+	cat testdata/nextjs_db.sql | docker compose exec -T postgres psql -U postgres -d nextjs_db
