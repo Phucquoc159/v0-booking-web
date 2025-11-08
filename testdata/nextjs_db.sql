@@ -9,7 +9,7 @@
 
 
 INSERT INTO "bo_phan" ("ID_BP", "TEN_BP") VALUES
-('1', 'Le tan');
+('BP1', 'Le tan');
 
 INSERT INTO "hang_phong" ("ID_HANG_PHONG", "ID_KP", "ID_LP") VALUES
 ('HP01', 'KP01', 'LP01');
