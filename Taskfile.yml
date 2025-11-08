@@ -26,4 +26,5 @@ tasks:
       - docker compose exec -T nextjs npx prisma migrate dev --name init_hotel_schema
       - docker compose exec -it nextjs npx prisma generate
       - echo "Seeding database..."
+      - sleep 3
       - cat testdata/nextjs_db.sql | docker compose exec -T postgres psql -U postgres -d nextjs_db

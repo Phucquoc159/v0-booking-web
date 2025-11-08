@@ -37,6 +37,7 @@ init: build up
 	@echo "Waiting for the database to be ready..."
 	sleep 5
 	@make migrate
+	sleep 3
 	@make seed
 	@echo "Project initialization complete!"
 
