@@ -8,3 +8,7 @@
   * Hiện tại:
     - Tạo nhân viên: OK -> hard code 1 phần
     - Đăng nhập bằng nhân viên: Implementing API -> Đang lỗi
+
+3. Register:
+  * Employees: có thể create được
+  * Customers: implement api rồi nhưng đang lỗi
