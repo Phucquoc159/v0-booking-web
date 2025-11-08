@@ -2,15 +2,28 @@ version: 3
 
 tasks:
   up:
+    desc: "Start all services in the background"
     cmds:
       - docker compose up -d
 
   down:
+    desc: "Stop and remove all services"
     cmds:
       - docker compose down
 
   build:
+    desc: "Build or rebuild services"
     cmds:
-      - docker compose up --build
+      - docker compose build
 
-
+  init:
+    desc: "Initialize the project (build, start, migrate, seed)"
+    cmds:
+      - task: build
+      - task: up
+      - echo "Waiting for the database to be ready..."
+      - sleep 5
+      - docker compose exec nextjs npx prisma migrate dev --name init
+      - docker compose exec nextjs npx prisma generate
+      - echo "Seeding database..."
+      - cat testdata/nextjs_db.sql | docker compose exec -T db psql -U postgres -d nextjs_db
