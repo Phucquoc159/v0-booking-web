@@ -42,8 +42,6 @@ init: build up
 
 # Run database migrations and generate Prisma client
 migrate:
-	@echo "Running database migrations..."
-	docker compose exec nextjs npx prisma migrate dev --name init
 	@echo "Generating Prisma client..."
 	docker compose exec nextjs npx prisma generate
 
