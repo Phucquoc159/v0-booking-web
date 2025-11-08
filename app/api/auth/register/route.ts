@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         ten,
         sdt: sdt || '',
         idBp: idBp || 'BP01', // Default bộ phận
-        idNq: idNq || 'NQ02', // Default nhóm quyền (staff)
+        idNq: idNq || 'NQ01', // Default nhóm quyền (staff)
       },
       include: {
         boPhan: true,

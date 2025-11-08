@@ -4,27 +4,6 @@ import { Phong } from '@/lib/generated/prisma'
 
 const API_URL = '/api/phong'
 
-export async function searchPhong(
-  fromDate: Date,
-  toDate: Date,
-  guestCount: number
-): Promise<ApiResponse<Phong[]>> {
-  try {
-    const params = new URLSearchParams({
-      fromDate: fromDate.toISOString(),
-      toDate: toDate.toISOString(),
-      guestCount: guestCount.toString(),
-    })
-    const response = await fetch(`${API_URL}/customs/rooms?${params}`)
-    return await response.json()
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
-}
-
 export interface ApiResponse<T> {
   success: boolean
   data?: T
