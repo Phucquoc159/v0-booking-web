@@ -25,6 +25,7 @@ import RoomHeader from "./header/page"
 import RoomStatsPage from "./stats/page"
 import { useRoomClasses } from "@/lib/hooks/roomClass"
 import { useRoomTypes } from "@/lib/hooks/roomTypes"
+import { useTrangThai } from "@/lib/hooks/trangThai"
 import { useToast } from "@/components/ui/toast"
 
 // Mock data
@@ -44,8 +45,8 @@ export default function RoomsPage() {
   const [phong, setPhong] = useState<Phong>({
     soPhong: "",
     tang: 0,
-    idHp: "HP01", //TODO: remove hardcode
-    idTt: "TT01", //TODO: remove hardcode
+    idHp: "",
+    idTt: "",
   })
 
   const { rooms, isLoading, isError } = useRooms()
@@ -57,6 +58,7 @@ export default function RoomsPage() {
   const toast = useToast()
   const rc = useRoomClasses()
   const rt = useRoomTypes()
+  const tt = useTrangThai()
 
   const filteredRooms = rooms?.filter((room) => {
     if (filterStatus !== "all" && room.trangThai.tenTrangThai.toLowerCase() !== filterStatus) return false
@@ -68,11 +70,24 @@ export default function RoomsPage() {
   if (isError) return <div>Error loading rooms</div>
 
   const createRoom = () => {
+    // Validate required fields
+    if (!phong.soPhong || !phong.tang || !phong.idHp || !phong.idTt) {
+      toast.error("Vui lòng điền đầy đủ thông tin phòng")
+      return
+    }
+
     createRoomMutation.mutate(phong, {
       onSuccess: () => {
         setOpenDialog(false)
         toast.success("Tạo phòng thành công")
         queryClient.invalidateQueries({ queryKey: ["rooms"] })
+        // Reset form
+        setPhong({
+          soPhong: "",
+          tang: 0,
+          idHp: "",
+          idTt: "",
+        })
       },
       onError: (error) => {
         toast.error("Tạo phòng thất bại")
@@ -84,7 +99,7 @@ export default function RoomsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <RoomHeader roomClasses={rc.roomClasses} phong={phong} createRoom={createRoom} setPhong={setPhong} open={openDialog} setOpen={setOpenDialog} />
+      <RoomHeader roomClasses={rc.roomClasses} trangThais={tt.trangThais} phong={phong} createRoom={createRoom} setPhong={setPhong} open={openDialog} setOpen={setOpenDialog} />
 
       {/* Stats */}
       <RoomStatsPage rooms={rooms} />

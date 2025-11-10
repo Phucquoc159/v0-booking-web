@@ -21,6 +21,7 @@ import { Search, Plus, Eye, Edit, X } from "lucide-react"
 import { generateBookingId, useBookings, useCreateBooking, useCreateBookingDetail } from "@/lib/hooks/booking"
 import { useRoomTypes } from "@/lib/hooks/roomTypes"
 import { useRoomClasses } from "@/lib/hooks/roomClass"
+import { useEmployees } from "@/lib/hooks/employee"
 import { CTPhieuDat, PhieuDat } from "@/lib/generated/prisma"
 import { useToast } from "@/components/ui/toast"
 
@@ -43,27 +44,64 @@ export default function BookingsPage() {
     ngayDi: new Date(),
     trangThai: "pending",
     //@ts-ignore
-    soTienCoc: 50000,
-    cccd: "1234567890123",
-    idNv: "NV1",
+    soTienCoc: 0,
+    cccd: "",
+    idNv: null,
   })
   const toast = useToast()
   const [ctPhieuDat, setCTPhieuDat] = useState<Omit<CTPhieuDat, "idCtPd">>({
-    idPd: "pd123",
-    idHp: "hp123",
+    idPd: "",
+    idHp: "",
     soLuongPhongO: 1,
     //@ts-ignore
-    donGia: 100000,
+    donGia: 0,
   })
 
   const { bookings } = useBookings()
   const { roomTypes } = useRoomTypes()
   const { roomClasses } = useRoomClasses()
+  const { employees } = useEmployees()
 
   const createBookingMutation = useCreateBooking()
   const createBookingDetailMutation = useCreateBookingDetail()
 
+  // Tính đơn giá tự động khi chọn hạng phòng
+  const handleRoomClassChange = (idHp: string) => {
+    setIdHp(idHp)
+    const selectedRoomClass = roomClasses.find((rc) => rc.idHp === idHp)
+    if (selectedRoomClass && selectedRoomClass.giaHangPhongs && selectedRoomClass.giaHangPhongs.length > 0) {
+      const latestPrice = selectedRoomClass.giaHangPhongs[0]?.gia
+      if (latestPrice) {
+        setCTPhieuDat({ ...ctPhieuDat, idHp, donGia: Number(latestPrice) })
+      }
+    } else {
+      setCTPhieuDat({ ...ctPhieuDat, idHp, donGia: 0 })
+    }
+  }
+
   const handleCreateBooking = () => {
+    // Validation
+    if (!phieuDat.cccd) {
+      toast.error("Vui lòng nhập CCCD khách hàng")
+      return
+    }
+    if (!idHp) {
+      toast.error("Vui lòng chọn loại phòng")
+      return
+    }
+    if (!ctPhieuDat.donGia || ctPhieuDat.donGia <= 0) {
+      toast.error("Vui lòng nhập đơn giá")
+      return
+    }
+    if (!phieuDat.soTienCoc || phieuDat.soTienCoc <= 0) {
+      toast.error("Vui lòng nhập số tiền cọc")
+      return
+    }
+    if (phieuDat.ngayBdThue >= phieuDat.ngayDi) {
+      toast.error("Ngày trả phòng phải sau ngày nhận phòng")
+      return
+    }
+
     const idPd = generateBookingId(bookings)
 
     createBookingMutation.mutate({
@@ -82,6 +120,25 @@ export default function BookingsPage() {
           onSuccess: () => {
             toast.success("Tạo đơn đặt phòng thành công")
             setOpenCreateDialog(false)
+            // Reset form
+            setPhieudat({
+              ngayDat: new Date(),
+              ngayBdThue: new Date(),
+              ngayDi: new Date(),
+              trangThai: "pending",
+              //@ts-ignore
+              soTienCoc: 0,
+              cccd: "",
+              idNv: null,
+            })
+            setCTPhieuDat({
+              idPd: "",
+              idHp: "",
+              soLuongPhongO: 1,
+              //@ts-ignore
+              donGia: 0,
+            })
+            setIdHp("")
           },
           onError: (error) => {
             console.log(error)
@@ -111,61 +168,155 @@ export default function BookingsPage() {
               Tạo Đặt Phòng
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white max-w-2xl">
+          <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
             <DialogHeader>
               <DialogTitle>Tạo Đặt Phòng Mới</DialogTitle>
-              <DialogDescription className="text-gray-400">Nhập thông tin đặt phòng</DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Label>Thông Tin Khách Hàng</Label>
-              </div>
-              <div className="col-span-2">
-                <Label>Cccd</Label>
+            <div className="space-y-4">
+              {/* Thông Tin Khách Hàng */}
+              <div>
+                <Label>CCCD Khách Hàng</Label>
                 <Input
                   className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
-                  placeholder="CCCD"
+                  placeholder="Nhập số CCCD"
                   value={phieuDat.cccd}
                   onChange={(e) => setPhieudat({ ...phieuDat, cccd: e.target.value })}
                 />
               </div>
-              <div className="col-span-2 border-t border-[#2a2a2a] pt-4 mt-2">
-                <Label>Thông Tin Phòng</Label>
+
+              {/* Thông Tin Đặt Phòng */}
+              <div className="border-t border-[#2a2a2a] pt-4">
+                <h3 className="text-white font-medium mb-3">Thông Tin Đặt Phòng</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Ngày Đặt</Label>
+                    <Input 
+                      className="bg-[#0a0a0a] border-[#2a2a2a] text-white" 
+                      type="date" 
+                      value={phieuDat.ngayDat ? new Date(phieuDat.ngayDat).toISOString().split('T')[0] : ''}
+                      onChange={(e) => setPhieudat({ ...phieuDat, ngayDat: new Date(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Trạng Thái</Label>
+                    <Select 
+                      value={phieuDat.trangThai} 
+                      onValueChange={(value) => setPhieudat({ ...phieuDat, trangThai: value as any })}
+                    >
+                      <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                        <SelectValue placeholder="Chọn trạng thái" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                        {Object.entries(statusConfig).map(([status, config]) => (
+                          <SelectItem key={status} value={status}>
+                            {config.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Nhân Viên</Label>
+                    <Select 
+                      value={phieuDat.idNv || ""} 
+                      onValueChange={(value) => setPhieudat({ ...phieuDat, idNv: value || null })}
+                    >
+                      <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                        <SelectValue placeholder="Chọn nhân viên" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                        <SelectItem value="">Không chọn</SelectItem>
+                        {employees?.map((employee) => (
+                          <SelectItem key={employee.idNv} value={employee.idNv}>
+                            {employee.ho} {employee.ten}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label>Loại Phòng</Label>
-                <Select onValueChange={(value) => setIdHp(roomClasses.find((roomClass) => roomClass.idLp === value)?.idHp || "HP01")}>
-                  <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
-                    <SelectValue placeholder="Chọn loại phòng" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
-                    {roomTypes?.map((roomType) => (
-                      <SelectItem value={roomType.idLp}>{roomType.tenLp}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+              {/* Thông Tin Phòng */}
+              <div className="border-t border-[#2a2a2a] pt-4">
+                <h3 className="text-white font-medium mb-3">Thông Tin Phòng</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Hạng Phòng</Label>
+                    <Select value={idHp} onValueChange={handleRoomClassChange}>
+                      <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                        <SelectValue placeholder="Chọn hạng phòng" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                        {roomClasses?.map((roomClass) => (
+                          <SelectItem key={roomClass.idHp} value={roomClass.idHp}>
+                            {roomClass.loaiPhong.tenLp} - {roomClass.kieuPhong.tenKp}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Số Lượng Phòng</Label>
+                    <Input 
+                      className="bg-[#0a0a0a] border-[#2a2a2a] text-white" 
+                      type="number" 
+                      min="1"
+                      placeholder="1" 
+                      value={ctPhieuDat.soLuongPhongO}
+                      onChange={(e) => setCTPhieuDat({ ...ctPhieuDat, soLuongPhongO: Number(e.target.value) || 1 })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Ngày Nhận Phòng</Label>
+                    <Input 
+                      className="bg-[#0a0a0a] border-[#2a2a2a] text-white" 
+                      type="date" 
+                      value={phieuDat.ngayBdThue ? new Date(phieuDat.ngayBdThue).toISOString().split('T')[0] : ''}
+                      onChange={(e) => setPhieudat({ ...phieuDat, ngayBdThue: new Date(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Ngày Trả Phòng</Label>
+                    <Input 
+                      className="bg-[#0a0a0a] border-[#2a2a2a] text-white" 
+                      type="date" 
+                      value={phieuDat.ngayDi ? new Date(phieuDat.ngayDi).toISOString().split('T')[0] : ''}
+                      onChange={(e) => setPhieudat({ ...phieuDat, ngayDi: new Date(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Đơn Giá (₫)</Label>
+                    <Input 
+                      className="bg-[#0a0a0a] border-[#2a2a2a] text-white" 
+                      type="number" 
+                      min="0"
+                      placeholder="0" 
+                      value={ctPhieuDat.donGia}
+                      onChange={(e) => setCTPhieuDat({ ...ctPhieuDat, donGia: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Số Tiền Cọc (₫)</Label>
+                    <Input 
+                      className="bg-[#0a0a0a] border-[#2a2a2a] text-white" 
+                      type="number" 
+                      min="0"
+                      placeholder="0" 
+                      value={phieuDat.soTienCoc}
+                      onChange={(e) => setPhieudat({ ...phieuDat, soTienCoc: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label>Số Khách</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="number" placeholder="2" onChange={(e) => setCTPhieuDat({ ...ctPhieuDat, soLuongPhongO: Number(e.target.value) })}/>
-              </div>
-              <div>
-                <Label>Ngày Nhận Phòng</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="date" onChange={(e) => setPhieudat({ ...phieuDat, ngayBdThue: new Date(e.target.value) })}/>
-              </div>
-              <div>
-                <Label>Ngày Trả Phòng</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="date" onChange={(e) => setPhieudat({ ...phieuDat, ngayDi: new Date(e.target.value) })}/>
-              </div>
-              <div className="col-span-2">
-                <Label>Ghi Chú</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="Ghi chú đặc biệt..." />
-              </div>
-              <div className="col-span-2">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleCreateBooking}>
-                  Tạo Đặt Phòng
-                </Button>
-              </div>
+
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700" 
+                onClick={handleCreateBooking}
+                disabled={createBookingMutation.isPending || createBookingDetailMutation.isPending}
+              >
+                {createBookingMutation.isPending || createBookingDetailMutation.isPending ? 'Đang tạo...' : 'Tạo Đặt Phòng'}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -242,7 +393,7 @@ export default function BookingsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings?.filter((booking) => booking.trangThai === filterStatus).map((booking) => (
+                  {bookings?.filter((booking) => filterStatus === "all" || booking.trangThai === filterStatus).map((booking) => (
                     <tr key={booking.idPd} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
                       <td className="p-4 text-white font-semibold">{booking.idPd}</td>
                       <td className="p-4">

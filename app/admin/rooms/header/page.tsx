@@ -20,12 +20,12 @@ import { Search, Plus, Edit, Trash2, Grid3x3, List } from "lucide-react"
 import { useRooms } from "@/lib/hooks/room"
 import { useMutation } from "@tanstack/react-query"
 import { createPhong } from "@/lib/services"
-import type { Phong } from "@/lib/generated/prisma"
+import type { Phong, TrangThai } from "@/lib/generated/prisma"
 import { HangPhongWithRelations } from "@/lib/types/relations"
 
 
 export default function RoomHeader(
-  { roomClasses, phong, createRoom, setPhong, open, setOpen }: { roomClasses: HangPhongWithRelations[], phong: Phong, createRoom: () => void, setPhong: (phong: Phong) => void, open: boolean, setOpen: (open: boolean  ) => void }
+  { roomClasses, trangThais, phong, createRoom, setPhong, open, setOpen }: { roomClasses: HangPhongWithRelations[], trangThais: TrangThai[], phong: Phong, createRoom: () => void, setPhong: (phong: Phong) => void, open: boolean, setOpen: (open: boolean  ) => void }
 ) {
   return (
       <div className="flex items-center justify-between">
@@ -56,7 +56,7 @@ export default function RoomHeader(
               </div>
               <div>
                 <Label>Loại Phòng</Label>
-                <Select onValueChange={(value) => setPhong({ ...phong, idHp: value })}>
+                <Select value={phong.idHp} onValueChange={(value) => setPhong({ ...phong, idHp: value })}>
                   <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
                     <SelectValue placeholder="Chọn loại phòng" />
                   </SelectTrigger>
@@ -64,6 +64,21 @@ export default function RoomHeader(
                     {roomClasses?.map((type) => (
                       <SelectItem key={type.idHp} value={type.idHp}>
                         {type.loaiPhong.tenLp} - {type.kieuPhong.tenKp}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Trạng Thái</Label>
+                <Select value={phong.idTt} onValueChange={(value) => setPhong({ ...phong, idTt: value })}>
+                  <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                    <SelectValue placeholder="Chọn trạng thái" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                    {trangThais?.map((trangThai) => (
+                      <SelectItem key={trangThai.idTt} value={trangThai.idTt}>
+                        {trangThai.tenTrangThai}
                       </SelectItem>
                     ))}
                   </SelectContent>
