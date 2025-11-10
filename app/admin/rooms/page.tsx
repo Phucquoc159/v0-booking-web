@@ -18,13 +18,14 @@ import {
 import { Label } from "@/components/ui/label"
 import { Search, Plus, Edit, Trash2, Grid3x3, List } from "lucide-react"
 import { useRooms } from "@/lib/hooks/room"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createPhong } from "@/lib/services"
-import { Phong } from "@prisma/client"
+import type { Phong } from "@/lib/generated/prisma"
 import RoomHeader from "./header/page"
 import RoomStatsPage from "./stats/page"
 import { useRoomClasses } from "@/lib/hooks/roomClass"
 import { useRoomTypes } from "@/lib/hooks/roomTypes"
+import { useToast } from "@/components/ui/toast"
 
 // Mock data
 const statusConfig = {
@@ -39,6 +40,7 @@ export default function RoomsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterFloor, setFilterFloor] = useState<string>("all")
+  const [openDialog, setOpenDialog] = useState<boolean>(false)
   const [phong, setPhong] = useState<Phong>({
     soPhong: "",
     tang: 0,
@@ -47,15 +49,13 @@ export default function RoomsPage() {
   })
 
   const { rooms, isLoading, isError } = useRooms()
-
-  console.log({ rooms })
-
+  const queryClient = useQueryClient()
   const createRoomMutation = useMutation({
     mutationFn: createPhong,
   })
 
+  const toast = useToast()
   const rc = useRoomClasses()
-
   const rt = useRoomTypes()
 
   const filteredRooms = rooms?.filter((room) => {
@@ -68,13 +68,23 @@ export default function RoomsPage() {
   if (isError) return <div>Error loading rooms</div>
 
   const createRoom = () => {
-    createRoomMutation.mutate(phong)
+    createRoomMutation.mutate(phong, {
+      onSuccess: () => {
+        setOpenDialog(false)
+        toast.success("Tạo phòng thành công")
+        queryClient.invalidateQueries({ queryKey: ["rooms"] })
+      },
+      onError: (error) => {
+        toast.error("Tạo phòng thất bại")
+        console.log(error)
+      },
+    })
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <RoomHeader roomClasses={rc.roomClasses} phong={phong} createRoom={createRoom} setPhong={setPhong} />
+      <RoomHeader roomClasses={rc.roomClasses} phong={phong} createRoom={createRoom} setPhong={setPhong} open={openDialog} setOpen={setOpenDialog} />
 
       {/* Stats */}
       <RoomStatsPage rooms={rooms} />
@@ -222,7 +232,7 @@ export default function RoomsPage() {
           <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
             <div className="p-4 border-b border-[#2a2a2a] flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Danh Sách Loại Phòng</h2>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setOpenDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Thêm Loại Phòng
               </Button>

@@ -5,7 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Suspense } from "react"
-import { Providers } from "./providers"
+import Providers from "./providers"
 
 export const metadata: Metadata = {
   title: "QK Hotel - Khách Sạn Sang Trọng & Hiện Đại",

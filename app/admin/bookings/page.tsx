@@ -18,9 +18,11 @@ import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Eye, Edit, X } from "lucide-react"
-import { useBookings, useCreateBooking } from "@/lib/hooks/booking"
-import { PhieuDat } from "@prisma/client"
-import { Decimal } from "@prisma/client/runtime/library"
+import { generateBookingId, useBookings, useCreateBooking, useCreateBookingDetail } from "@/lib/hooks/booking"
+import { useRoomTypes } from "@/lib/hooks/roomTypes"
+import { useRoomClasses } from "@/lib/hooks/roomClass"
+import { CTPhieuDat, PhieuDat } from "@/lib/generated/prisma"
+import { useToast } from "@/components/ui/toast"
 
 const statusConfig = {
   pending: { label: "Chờ Xác Nhận", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
@@ -33,27 +35,66 @@ const statusConfig = {
 export default function BookingsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  const [idHp, setIdHp] = useState<string>("")
+  const [openCreateDialog, setOpenCreateDialog] = useState<boolean>(false)
   const [phieuDat, setPhieudat] = useState<Omit<PhieuDat, "idPd">>({
     ngayDat: new Date(),
     ngayBdThue: new Date(),
     ngayDi: new Date(),
     trangThai: "pending",
-    soTienCoc: Decimal(50000),
+    //@ts-ignore
+    soTienCoc: 50000,
     cccd: "1234567890123",
-    idNv: "nv123",
+    idNv: "NV1",
+  })
+  const toast = useToast()
+  const [ctPhieuDat, setCTPhieuDat] = useState<Omit<CTPhieuDat, "idCtPd">>({
+    idPd: "pd123",
+    idHp: "hp123",
+    soLuongPhongO: 1,
+    //@ts-ignore
+    donGia: 100000,
   })
 
-const { bookings } = useBookings()
+  const { bookings } = useBookings()
+  const { roomTypes } = useRoomTypes()
+  const { roomClasses } = useRoomClasses()
+
   const createBookingMutation = useCreateBooking()
+  const createBookingDetailMutation = useCreateBookingDetail()
 
   const handleCreateBooking = () => {
-    createBookingMutation.mutate(phieuDat)
-  }
+    const idPd = generateBookingId(bookings)
 
-  const filteredBookings = bookings?.filter((booking) => {
-    if (filterStatus !== "all" && booking.trangThai !== filterStatus) return false
-    return true
-  })
+    createBookingMutation.mutate({
+      //@ts-ignore
+      idPd: idPd,
+      ...phieuDat,
+    }, {
+      onSuccess: (data) => {
+        console.log({ data })
+        createBookingDetailMutation.mutate({
+          idPd: idPd,
+          idHp: idHp,
+          soLuongPhongO: ctPhieuDat.soLuongPhongO,
+          donGia: ctPhieuDat.donGia,
+        }, {
+          onSuccess: () => {
+            toast.success("Tạo đơn đặt phòng thành công")
+            setOpenCreateDialog(false)
+          },
+          onError: (error) => {
+            console.log(error)
+            toast.error("Tạo chi tiết đơn đặt phòng thất bại")
+          }
+        })
+      },
+      onError: (error) => {
+        console.log(error)
+        toast.error("Tạo đơn đặt phòng thất bại")
+      }
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -63,7 +104,7 @@ const { bookings } = useBookings()
           <h1 className="text-3xl font-bold text-white mb-2">Quản Lý Đặt Phòng</h1>
           <p className="text-gray-400">Quản lý và theo dõi các đơn đặt phòng</p>
         </div>
-        <Dialog>
+        <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus className="h-4 w-4 mr-2" />
@@ -79,24 +120,8 @@ const { bookings } = useBookings()
               <div className="col-span-2">
                 <Label>Thông Tin Khách Hàng</Label>
               </div>
-              <div>
-                <Label>Họ Tên</Label>
-                <Input
-                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
-                  placeholder="Nguyễn Văn A"
-                  // This is a placeholder for customer name, assuming cccd is the customer identifier
-                />
-              </div>
-              <div>
-                <Label>Số Điện Thoại</Label>
-                <Input
-                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
-                  placeholder="0901234567"
-                  // This is a placeholder for customer phone
-                />
-              </div>
               <div className="col-span-2">
-                <Label>Email</Label>
+                <Label>Cccd</Label>
                 <Input
                   className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
                   placeholder="CCCD"
@@ -109,30 +134,28 @@ const { bookings } = useBookings()
               </div>
               <div>
                 <Label>Loại Phòng</Label>
-                <Select>
+                <Select onValueChange={(value) => setIdHp(roomClasses.find((roomClass) => roomClass.idLp === value)?.idHp || "HP01")}>
                   <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
                     <SelectValue placeholder="Chọn loại phòng" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="deluxe">Deluxe</SelectItem>
-                    <SelectItem value="suite">Suite</SelectItem>
-                    <SelectItem value="executive">Executive</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
+                    {roomTypes?.map((roomType) => (
+                      <SelectItem value={roomType.idLp}>{roomType.tenLp}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>Số Khách</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="number" placeholder="2" />
+                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="number" placeholder="2" onChange={(e) => setCTPhieuDat({ ...ctPhieuDat, soLuongPhongO: Number(e.target.value) })}/>
               </div>
               <div>
                 <Label>Ngày Nhận Phòng</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="date" />
+                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="date" onChange={(e) => setPhieudat({ ...phieuDat, ngayBdThue: new Date(e.target.value) })}/>
               </div>
               <div>
                 <Label>Ngày Trả Phòng</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="date" />
+                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" type="date" onChange={(e) => setPhieudat({ ...phieuDat, ngayDi: new Date(e.target.value) })}/>
               </div>
               <div className="col-span-2">
                 <Label>Ghi Chú</Label>
@@ -219,7 +242,7 @@ const { bookings } = useBookings()
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings?.map((booking) => (
+                  {bookings?.filter((booking) => booking.trangThai === filterStatus).map((booking) => (
                     <tr key={booking.idPd} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
                       <td className="p-4 text-white font-semibold">{booking.idPd}</td>
                       <td className="p-4">
@@ -296,7 +319,7 @@ const { bookings } = useBookings()
                     <p className="text-sm text-gray-400">
                       Phòng {5} - {5 + " VIP"} //TODO: get số phòng và tên loại phòng
                     </p>
-                    <p className="text-sm text-gray-400">{booking.ngayBdThue.toLocaleDateString("vi-VN")} - {booking.ngayDi.toLocaleDateString("vi-VN")}</p>
+                    <p className="text-sm text-gray-400">{booking?.ngayBdThue?.toString()} - {booking?.ngayDi?.toString()}</p>
                   </div>
                 ))}
               </div>

@@ -20,20 +20,20 @@ import { Search, Plus, Edit, Trash2, Grid3x3, List } from "lucide-react"
 import { useRooms } from "@/lib/hooks/room"
 import { useMutation } from "@tanstack/react-query"
 import { createPhong } from "@/lib/services"
-import { Phong } from "@prisma/client"
+import type { Phong } from "@/lib/generated/prisma"
 import { HangPhongWithRelations } from "@/lib/types/relations"
 
 
 export default function RoomHeader(
-  { roomClasses, phong, createRoom, setPhong }: { roomClasses: HangPhongWithRelations[], phong: Phong, createRoom: () => void, setPhong: (phong: Phong) => void }
+  { roomClasses, phong, createRoom, setPhong, open, setOpen }: { roomClasses: HangPhongWithRelations[], phong: Phong, createRoom: () => void, setPhong: (phong: Phong) => void, open: boolean, setOpen: (open: boolean  ) => void }
 ) {
   return (
-          <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Quản Lý Phòng</h1>
           <p className="text-gray-400">Quản lý trạng thái và thông tin phòng khách sạn</p>
         </div>
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus className="h-4 w-4 mr-2" />
@@ -48,7 +48,7 @@ export default function RoomHeader(
             <div className="space-y-4">
               <div>
                 <Label>Số Phòng</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="101" value={phong.soPhong} onChange={(e) => setPhong({ ...phong, soPhong: e.target.value })} />
+                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="P01" value={phong.soPhong} onChange={(e) => setPhong({ ...phong, soPhong: e.target.value })} />
               </div>
               <div>
                 <Label>Tầng</Label>
@@ -56,7 +56,7 @@ export default function RoomHeader(
               </div>
               <div>
                 <Label>Loại Phòng</Label>
-                <Select>
+                <Select onValueChange={(value) => setPhong({ ...phong, idHp: value })}>
                   <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
                     <SelectValue placeholder="Chọn loại phòng" />
                   </SelectTrigger>

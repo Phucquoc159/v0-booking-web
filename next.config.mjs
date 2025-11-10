@@ -9,15 +9,25 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  webpack: (config, { dev }) => {
+  webpack: (config, { dev, isServer }) => {
     if (dev) {
       config.watchOptions = {
-        poll: 1000, // Check for changes every second
-        aggregateTimeout: 300, // Delay before rebuilding
+        poll: 1000,
+        aggregateTimeout: 300,
       }
     }
+    
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'async_hooks': false,
+        'node:async_hooks': false,
+      };
+    }
+    
+    config.externals = [...(config.externals || []), '@prisma/client'];
+    
     return config
   },
 }
-
 export default nextConfig
