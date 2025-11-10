@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"
 import AvatarComponent from "@/components//ui/avatar";// Đường dẫn tới file component của bạn
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
   useEffect(() => {
     const userData = localStorage.getItem("userData");
     setIsLoggedIn(!!userData); // Set isLoggedIn to true if userData exists
@@ -71,13 +73,13 @@ export function Header() {
                 </Button>
               </Link>
             ) : (
-              <div>
+              <div className="flex gap-2 items-center">
+                <div onClick={router.push('/user-info')}><AvatarComponent name="User" size={25} /></div>
                 <Button
                   variant="outline"
-                  className="gap-2 bg-transparent"
+                  className="gap-2 bg-transparent border border-[2px] border-[#888888]"
                   onClick={handleLogout}
                 >
-                  <AvatarComponent name="User" size={20} />
                   Đăng Xuất
                 </Button>
               </div>
@@ -145,12 +147,14 @@ export function Header() {
                 </Link>
               ) : (
                 <div>
+                  <div>
+                    <AvatarComponent name="User" size={20} />
+                  </div>
                   <Button
                     variant="outline"
                     className="gap-2 bg-transparent w-full"
                     onClick={handleLogout}
                   >
-                    <AvatarComponent name="User" size={20} />
                     Đăng Xuất
                   </Button>
                 </div>
