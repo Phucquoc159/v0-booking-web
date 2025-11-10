@@ -175,9 +175,8 @@ export async function fetchUserInfoById(idNv: string): Promise<UserInfoResponse>
     const response = await fetch(`${API_BASE}/update-user/${idNv}`, {
       method: 'GET', 
       // Credentials cần thiết nếu endpoint yêu cầu xác thực để xem thông tin user khác
-      credentials: 'include', 
     })
-    
+    console.log(idNv);
     // Nếu response không thành công (ví dụ: 404, 401)
     if (!response.ok) {
         const errorData = await response.json();

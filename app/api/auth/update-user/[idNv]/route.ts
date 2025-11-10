@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { idNv } = params
-
+    console.log(params)
     if (!idNv) {
       return NextResponse.json(
         { success: false, message: 'Missing user ID' },
