@@ -37,3 +37,10 @@ export type RoomPromotions = RoomPromotion[]
 export type RoomId = Room['id']
 export type RoomWithoutPromotions = Omit<Room, 'promotions'>
 export type RoomBasicInfo = Pick<Room, 'id' | 'name' | 'price' | 'rating' | 'availability'>
+
+export type RoomTypeForm = {
+  tenLoai: string
+  loaiGiuong: string
+  sucChua: string
+  gia: string
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ChangeEvent } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,10 +23,11 @@ import { createPhong } from "@/lib/services"
 import type { Phong } from "@/lib/generated/prisma"
 import RoomHeader from "./header/page"
 import RoomStatsPage from "./stats/page"
-import { useRoomClasses } from "@/lib/hooks/roomClass"
-import { useRoomTypes } from "@/lib/hooks/roomTypes"
+import { generateRoomClassId, useCreateRoomClass, useRoomClasses } from "@/lib/hooks/roomClass"
+import { generateRoomTypeId, useCreateRoomType, useRoomTypes } from "@/lib/hooks/roomTypes"
 import { useTrangThai } from "@/lib/hooks/trangThai"
 import { useToast } from "@/components/ui/toast"
+import { RoomTypeForm } from "@/lib/types/room"
 
 // Mock data
 const statusConfig = {
@@ -42,13 +43,23 @@ export default function RoomsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterFloor, setFilterFloor] = useState<string>("all")
   const [openDialog, setOpenDialog] = useState<boolean>(false)
+
+  const [typeDialogOpen, setTypeDialogOpen] = useState(false)
+  const [newRoomType, setNewRoomType] = useState<RoomTypeForm>({
+    tenLoai: "",
+    loaiGiuong: "",
+    sucChua: "",
+    gia: "",
+  })
   const [phong, setPhong] = useState<Phong>({
     soPhong: "",
     tang: 0,
     idHp: "",
     idTt: "",
   })
-
+  
+  const createRoomTypeMutation = useCreateRoomType()
+  const createRoomClassMutation = useCreateRoomClass()
   const { rooms, isLoading, isError } = useRooms()
   const queryClient = useQueryClient()
   const createRoomMutation = useMutation({
@@ -68,6 +79,52 @@ export default function RoomsPage() {
 
   if (isLoading) return <div>Loading...</div>
   if (isError) return <div>Error loading rooms</div>
+
+  const handleRoomTypeFieldChange = (field: keyof RoomTypeForm) => (event: ChangeEvent<HTMLInputElement>) => {
+    setNewRoomType((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }))
+  }
+
+
+  const createRoomType = () => {
+    if (!newRoomType.tenLoai || !newRoomType.loaiGiuong || !newRoomType.sucChua || !newRoomType.gia) {
+      toast.error("Vui lòng điền đầy đủ thông tin loại phòng")
+      return
+    }
+
+    const idLp = generateRoomTypeId(rt.roomTypes)
+    createRoomTypeMutation.mutate({
+      idLp: idLp,
+      tenLp: newRoomType.tenLoai,
+      moTa: null
+    }, {
+      onSuccess: () => {
+        createRoomClassMutation.mutate({
+          //@ts-ignore
+          idHp: generateRoomClassId(rc.roomClasses),
+          idLp: idLp,
+        }, {
+          onSuccess: () => {
+            toast.success("Tạo loại phòng thành công")
+            queryClient.invalidateQueries({ queryKey: ["room-types"] })
+            setTypeDialogOpen(false)
+            setNewRoomType({
+              tenLoai: "",
+              loaiGiuong: "",
+              sucChua: "",
+              gia: "",
+            })
+          },
+          onError: (error) => {
+            toast.error("Tạo loại giuong thất bại")
+            console.log(error)
+          }
+        })
+      },
+    })
+    }
 
   const createRoom = () => {
     // Validate required fields
@@ -247,10 +304,82 @@ export default function RoomsPage() {
           <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
             <div className="p-4 border-b border-[#2a2a2a] flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Danh Sách Loại Phòng</h2>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setOpenDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Thêm Loại Phòng
-              </Button>
+              <Dialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Thêm Loại Phòng
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                  <DialogHeader>
+                    <DialogTitle>Thêm Loại Phòng</DialogTitle>
+                    <DialogDescription>Nhập thông tin loại phòng mới.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="ten-loai" className="text-gray-300">
+                        Tên loại
+                      </Label>
+                      <Input
+                        id="ten-loai"
+                        placeholder="Nhập tên loại"
+                        value={newRoomType.tenLoai}
+                        onChange={handleRoomTypeFieldChange("tenLoai")}
+                        className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="loai-giuong" className="text-gray-300">
+                        Loại giường
+                      </Label>
+                      <Input
+                        id="loai-giuong"
+                        placeholder="Nhập loại giường"
+                        value={newRoomType.loaiGiuong}
+                        onChange={handleRoomTypeFieldChange("loaiGiuong")}
+                        className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="suc-chua" className="text-gray-300">
+                        Sức chứa
+                      </Label>
+                      <Input
+                        id="suc-chua"
+                        type="number"
+                        min={1}
+                        placeholder="Nhập sức chứa"
+                        value={newRoomType.sucChua}
+                        onChange={handleRoomTypeFieldChange("sucChua")}
+                        className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gia" className="text-gray-300">
+                        Giá/đêm
+                      </Label>
+                      <Input
+                        id="gia"
+                        type="number"
+                        min={0}
+                        placeholder="Nhập giá/đêm"
+                        value={newRoomType.gia}
+                        onChange={handleRoomTypeFieldChange("gia")}
+                        className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" className="border-[#2a2a2a] text-gray-300" onClick={() => setTypeDialogOpen(false)}>
+                      Hủy
+                    </Button>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={createRoomType}>
+                      Tạo loại phòng
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
