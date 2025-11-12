@@ -12,13 +12,13 @@ INSERT INTO "bo_phan" ("ID_BP", "TEN_BP") VALUES
 ('BP1', 'Le tan');
 
 INSERT INTO "hang_phong" ("ID_HANG_PHONG", "ID_KP", "ID_LP") VALUES
-('HP01', 'KP01', 'LP01');
+('HP1', 'KP1', 'LP1');
 
 INSERT INTO "kieu_phong" ("ID_KP", "TEN_KP", "MO_TA", "SO_LUONG_KHACH") VALUES
-('KP01', 'VIP 1', 'VIP', 10);
+('KP1', 'VIP 1', 'VIP', 10);
 
 INSERT INTO "loai_phong" ("ID_LP", "TEN_LP", "MO_TA") VALUES
-('LP01', 'VIP 1', 'VIP');
+('LP1', 'VIP 1', 'VIP');
 
 INSERT INTO "nhan_vien" ("ID_NV", "HO", "TEN", "PHAI", "NGAY_SINH", "DIA_CHI", "SDT", "EMAIL", "HINH", "USERNAME", "PASSWORD", "ID_BP", "ID_NQ") VALUES
 ('NV1', 'Quoka', 'Ka', 'NAM', '2025-10-27', 'Test', '0901111111', 'admin@qkhotel.com', NULL, 'admin@qkhotel.com', 'test', '1', 'NQ1'),
@@ -29,9 +29,9 @@ INSERT INTO "nhom_quyen" ("ID_NQ", "TEN_NC") VALUES
 ('NQ1', 'NhanVien');
 
 INSERT INTO "phong" ("SOPHONG", "TANG", "ID_HANG_PHONG", "ID_TT") VALUES
-('P01', 2, 'HP01', 'TT01'),
-('P02', 2, 'HP01', 'TT01');
+('P01', 2, 'HP1', 'TT1'),
+('P02', 2, 'HP1', 'TT1');
 
 INSERT INTO "trang_thai" ("ID_TT", "TEN_TRANG_THAI") VALUES
-('TT01', 'Trống');
+('TT1', 'Trống');
 
