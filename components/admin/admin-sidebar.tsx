@@ -25,7 +25,7 @@ const menuItems = [
   { icon: Utensils, label: "Dịch Vụ", href: "/admin/services" },
   { icon: DollarSign, label: "Hóa Đơn", href: "/admin/invoices" },
   { icon: Users, label: "Nhân Viên", href: "/admin/employees" },
-  { icon: Settings, label: "Cài Đặt", href: "/admin/settings" },
+  // { icon: Settings, label: "Cài Đặt", href: "/admin/settings" },
 ]
 
 export function AdminSidebar() {

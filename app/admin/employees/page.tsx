@@ -3,46 +3,69 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, Edit, Trash2, Shield } from "lucide-react"
-import { createNhanVien, deleteNhanVien } from "@/lib/services/nhan-vien.service";
+import { Search, Plus, Edit, Trash2 } from "lucide-react"
+import { createNhanVien, deleteNhanVien, updateNhanVien } from "@/lib/services/nhan-vien.service";
+import { 
+  fetchUserInfoById, 
+  updateUserInfo
+} from "@/lib/services/auth.service" 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEmployees } from "@/lib/hooks/employee";
-import { useState } from "react"
-import { defaultIdBp, defaultIdNq } from "@/lib/constants/constants"
+import { useState, useEffect } from "react"
+// Import type cho nhân viên (cần thiết cho form sửa)
+type Employee = {
+    idNv?: string;
+    ho?: string;
+    ten?: string;
+    email?: string;
+    diaChi?: string;
+    ngaySinh?: string | null; // Có thể là string cho ngày sinh
+    sdt?: string;
+    idBp?: string;
+    password?: string; // Mật khẩu có thể không được hiển thị/sửa
+    username?: string;
+    phai?: string;
+    idNq?: string;
+}
 
+// Cấu hình đã cho
 const departmentConfig = {
-  admin: { label: "Quản Trị", color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
-  reception: { label: "Lễ Tân", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  housekeeping: { label: "Buồng Phòng", color: "bg-green-500/10 text-green-500 border-green-500/20" },
-  restaurant: { label: "Nhà Hàng", color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
+  BP2: { label: "Quản Trị", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", NQ: "NQ2", BP: "BP2" },
+  BP1: { label: "Lễ Tân", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", NQ: "NQ1", BP: "BP1" },
 }
 
 const statusConfig = {
-  active: { label: "Đang Làm", color: "bg-green-500/10 text-green-500 border-green-500/20" },
-  inactive: { label: "Nghỉ Việc", color: "bg-gray-500/10 text-gray-500 border-gray-500/20" },
+  BP1: { label: "User", color: "bg-green-500/10 text-white border-green-500/20" },
+  BP2: { label: "Admin", color: "bg-gray-500/10 text-blue border-gray-500/20" },
+}
+
+// Giá trị khởi tạo cho form Thêm
+const initialFormData = {
+  ho: '',
+  ten: '',
+  email: '',
+  diaChi: '',
+  sdt: '',
+  idBp: 'BP1', // Mặc định Lễ Tân
+  password: '',
+  username: '',
+  phai: 'Nam',
+  idNq: 'NQ1', // Mặc định Nhóm quyền 1
 }
 
 export default function EmployeesPage() {
-  const [formData, setFormData] = useState({
-    ho: '',
-    ten: '',
-    email: '',
-    diaChi: '',
-    ngaySinh: null,
-    sdt: '',
-    idBp: '',
-    password: '',
-    username: '',
-    phai: '',
-    idNq: 'nq1',
-  })
+  const [addFormData, setAddFormData] = useState(initialFormData)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
   const queryClient = useQueryClient();
 
   const { employees, isLoading, isError, error } = useEmployees();
+
+  // --- Mutations ---
 
   const deleteMutation = useMutation({
     mutationFn: deleteNhanVien,
@@ -57,95 +80,143 @@ export default function EmployeesPage() {
 
   const createMutation = useMutation({
     mutationFn: createNhanVien,
-    onSuccess: () => {
-      alert('Thêm nhân viên thành công!');
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['employees'] });
       // Reset form
-      setFormData({
-        ho: '',
-        ten: '',
-        email: '',
-        sdt: '',
-        idBp: '1',
-        password: '',
-        username: '',
-        phai: 'Nam',
-        idNq: 'NQ1',
-        diaChi: '',
-        ngaySinh: null,
-      });
+      setAddFormData(initialFormData);
+      alert('Thêm nhân viên thành công!');
     },
     onError: (error: any) => {
       alert(`Thêm thất bại: ${error.response?.data?.message || error.message}`);
     }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: updateNhanVien,
+    onSuccess: () => {
+        alert('Cập nhật nhân viên thành công!');
+        setIsEditDialogOpen(false); // Đóng dialog
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+    onError: (error: any) => {
+        alert(`Cập nhật thất bại: ${error.response?.data?.message || error.message}`);
+    }
+  });
+
+
   if (isLoading) return <p>Đang tải dữ liệu...</p>;
   if (isError) return <p>Lỗi: {(error as Error).message}</p>;
 
-  const createEmployee = () => {
+  // --- Handlers ---
+
+  const handleCreateEmployee = async () => {
+    // Logic tạo idNv: Tự động thêm tiền tố 'NV'
     const idNv = "NV" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    createMutation.mutate({
-      ...formData,
-      //@ts-ignore
+    
+    // Tạo bản sao dữ liệu và loại bỏ các trường không cần gửi (nếu có)
+    const dataToSend = {
+      ...addFormData,
       idNv,
-      idBp: defaultIdBp,
-      idNq: defaultIdNq,
-     }); // Cung cấp giá trị mặc định nếu cần
+    }
+    
+    // @ts-ignore
+    createMutation.mutate(dataToSend);
+  };
+  
+  const handleUpdateEmployee = async () => {
+    if (!editingEmployee) return;
+
+    // Chuẩn bị dữ liệu gửi đi (loại bỏ username, password nếu không muốn sửa)
+    const dataToUpdate = {
+        idNv: editingEmployee.idNv,
+        ho: editingEmployee.ho,
+        ten: editingEmployee.ten,
+        email: editingEmployee.email,
+        diaChi: editingEmployee.diaChi,
+        sdt: editingEmployee.sdt,
+        idBp: editingEmployee.idBp,
+        phai: editingEmployee.phai,
+        idNq: editingEmployee.idNq,
+        // Không gửi password/username trừ khi có trường nhập riêng cho việc đổi
+    };
+
+    const response = await updateUserInfo(dataToUpdate as any)
+      
+    if (response.success) {
+        alert(response.message || "Cập nhật thông tin cá nhân thành công!")
+      } else {
+        alert(response.message || "Cập nhật thất bại. Vui lòng thử lại.")
+      }
   };
 
-  const handleFullNameChange = (value: string) => {
+  const handleFullNameChange = (value: string, formType: 'add' | 'edit') => {
     const parts = value.trim().split(' ')
     const ten = parts.pop() || ''
     const ho = parts.join(' ')
 
-    setFormData(prev => ({
-      ...prev,
-      ho,
-      ten
-    }))
+    if (formType === 'add') {
+        setAddFormData(prev => ({ ...prev, ho, ten }))
+    } else {
+        setEditingEmployee(prev => prev ? ({ ...prev, ho, ten }) : null)
+    }
   }
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
+  const handleChange = (field: keyof Employee | keyof typeof initialFormData, value: string, formType: 'add' | 'edit') => {
+    if (formType === 'add') {
+        setAddFormData(prev => ({ ...prev, [field]: value }))
+    } else {
+        setEditingEmployee(prev => prev ? ({ ...prev, [field]: value }) : null)
+    }
   }
 
-  const handleDeleteEmployee = (idNv: string) => {
+  const handleDeleteEmployee = async (idNv: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa nhân viên này không?')) {
       deleteMutation.mutate(idNv);
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Quản Lý Nhân Viên</h1>
-          <p className="text-gray-400">Quản lý nhân viên và phân quyền hệ thống</p>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              Thêm Nhân Viên
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
-            <DialogHeader>
-              <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
+  const handleEditClick = async (idNv: string) => {
+    try {
+        // Gọi API getInfoUser để lấy dữ liệu chi tiết
+        const employeeData = await fetchUserInfoById(idNv);
+        console.log(employeeData.data)
+        // Cập nhật state để hiển thị trên form sửa
+        if (employeeData.success) {
+          await setEditingEmployee({
+              ...(employeeData.data || {})?.user as Employee,
+          });
+
+          await setIsEditDialogOpen(true);
+        }
+    } catch (error: any) {
+        alert(`Không thể tải thông tin nhân viên: ${error.message}`);
+    }
+  };
+
+  // --- Render Functions ---
+
+  const renderAddEmployeeForm = () => (
+    <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+        <DialogHeader>
+            <DialogTitle>Thêm Nhân Viên Mới{}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+            <div>
+                <Label>Username</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="abcd1234556"
+                  value={addFormData.username}
+                  onChange={(e) => handleChange('username', e.target.value, 'add')}
+                  />
+              </div>
               <div>
                 <Label>Họ Tên</Label>
                 <Input
                   className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
                   placeholder="Nguyễn Văn A"
-                  onChange={(e) => handleFullNameChange(e.target.value)}
-                  value={formData.ho + ' ' + formData.ten}
+                  onChange={(e) => handleFullNameChange(e.target.value, 'add')}
+                  value={addFormData.ho + ' ' + addFormData.ten}
                   />
               </div>
               <div>
@@ -153,8 +224,8 @@ export default function EmployeesPage() {
                 <Input
                   className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
                   placeholder="email@qkhotel.com"
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  value={formData.email}
+                  onChange={(e) => handleChange('email', e.target.value, 'add')}
+                  value={addFormData.email}
                   />
               </div>
               <div>
@@ -162,21 +233,19 @@ export default function EmployeesPage() {
                 <Input
                   className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
                   placeholder="0901234567"
-                  onChange={(e) => handleChange('sdt', e.target.value)}
-                  value={formData.sdt}
+                  onChange={(e) => handleChange('sdt', e.target.value, 'add')}
+                  value={addFormData.sdt}
                   />
               </div>
               <div>
                 <Label>Bộ Phận</Label>
-                <Select value={formData.idBp} onValueChange={(value) => handleChange('idBp', value)}>
+                <Select value={addFormData.idBp} onValueChange={(value) => handleChange('idBp', value, 'add')}>
                   <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
                     <SelectValue placeholder="Chọn bộ phận" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
-                    <SelectItem value="admin">Quản Trị</SelectItem>
-                    <SelectItem value="reception">Lễ Tân</SelectItem>
-                    <SelectItem value="housekeeping">Buồng Phòng</SelectItem>
-                    <SelectItem value="restaurant">Nhà Hàng</SelectItem>
+                    <SelectItem value="BP2">Quản Trị</SelectItem>
+                    <SelectItem value="BP1">Lễ Tân</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -186,17 +255,133 @@ export default function EmployeesPage() {
                   className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
                   type="password"
                   placeholder="••••••••"
-                  onChange={(e) => handleChange('password', e.target.value)}
-                  value={formData.password}
+                  onChange={(e) => handleChange('password', e.target.value, 'add')}
+                  value={addFormData.password}
                   />
               </div>
-              <Button onClick={createEmployee} disabled={createMutation.isPending} className="w-full bg-blue-600 hover:bg-blue-700">
+              <Button onClick={handleCreateEmployee} disabled={createMutation.isPending} className="w-full bg-blue-600 hover:bg-blue-700">
                 {createMutation.isPending ? 'Đang thêm...' : 'Thêm Nhân Viên'}
               </Button>
             </div>
-          </DialogContent>
+    </DialogContent>
+  )
+
+  const renderEditEmployeeForm = () => (
+    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+            <DialogHeader>
+                <DialogTitle>Sửa Thông Tin Nhân Viên: {editingEmployee?.idNv}</DialogTitle>
+            </DialogHeader>
+            {editingEmployee ? (
+                <div className="space-y-4">
+                    {/* Username (thường là readonly) */}
+                    <div>
+                        <Label>Username1111</Label>
+                        <Input
+                            className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                            value={editingEmployee.username}
+                            onChange={(e) => handleChange('username', e.target.value, 'edit')}
+                        />
+                    </div>
+                    {/* Họ Tên */}
+                    <div>
+                        <Label>Họ Tên</Label>
+                        <Input
+                            className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                            placeholder="Nguyễn Văn A"
+                            onChange={(e) => handleFullNameChange(e.target.value, 'edit')}
+                            value={editingEmployee.ho + ' ' + editingEmployee.ten}
+                        />
+                    </div>
+                    {/* Email */}
+                    <div>
+                        <Label>Email</Label>
+                        <Input
+                            className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                            placeholder="email@qkhotel.com"
+                            onChange={(e) => handleChange('email', e.target.value, 'edit')}
+                            value={editingEmployee.email}
+                        />
+                    </div>
+                    {/* SĐT */}
+                    <div>
+                        <Label>Số Điện Thoại</Label>
+                        <Input
+                            className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                            placeholder="0901234567"
+                            onChange={(e) => handleChange('sdt', e.target.value, 'edit')}
+                            value={editingEmployee.sdt}
+                        />
+                    </div>
+                    {/* Bộ Phận */}
+                    <div>
+                        <Label>Bộ Phận</Label>
+                        <Select value={editingEmployee.idBp} onValueChange={(value) => handleChange('idBp', value, 'edit')}>
+                            <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                                <SelectValue placeholder="Chọn bộ phận" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                                <SelectItem value="BP2">Quản Trị</SelectItem>
+                                <SelectItem value="BP1">Lễ Tân</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {/* Nhóm quyền (idNq) */}
+                     <div>
+                        <Label>Nhóm Quyền</Label>
+                        <Select value={editingEmployee.idNq} onValueChange={(value) => handleChange('idNq', value, 'edit')}>
+                            <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                                <SelectValue placeholder="Chọn nhóm quyền" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                                <SelectItem value="NQ1">Nhóm Quyền 1</SelectItem>
+                                <SelectItem value="NQ2">Nhóm Quyền 2</SelectItem>
+                                {/* Thêm các NQ khác nếu có */}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <DialogFooter>
+                        <Button 
+                            onClick={handleUpdateEmployee} 
+                            disabled={updateMutation.isPending} 
+                            className="w-full bg-green-600 hover:bg-green-700"
+                        >
+                            {updateMutation.isPending ? 'Đang cập nhật...' : 'Lưu Thay Đổi'}
+                        </Button>
+                    </DialogFooter>
+                </div>
+            ) : (
+                <p>Đang tải dữ liệu nhân viên...</p>
+            )}
+        </DialogContent>
+    </Dialog>
+  )
+
+  // --- Main Render ---
+
+  return (
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#888888] mb-2">Quản Lý Nhân Viên</h1>
+          <p className="text-gray-400">Quản lý nhân viên và phân quyền hệ thống</p>
+        </div>
+        {/* Dialog Thêm Nhân Viên */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm Nhân Viên
+            </Button>
+          </DialogTrigger>
+          {renderAddEmployeeForm()}
         </Dialog>
       </div>
+
+      {/* Dialog Sửa Nhân Viên */}
+      {renderEditEmployeeForm()}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -228,10 +413,8 @@ export default function EmployeesPage() {
                 <th className="text-left p-4 text-gray-400 font-medium">Mã NV</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Họ Tên</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Liên Hệ</th>
-                <th className="text-left p-4 text-gray-400 font-medium">Bộ Phận</th>
+                <th className="text-left p-4 text-gray-400 font-medium">Nhóm quyền</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Chức Vụ</th>
-                <th className="text-left p-4 text-gray-400 font-medium">Trạng Thái</th>
-                <th className="text-left p-4 text-gray-400 font-medium">Ngày Vào</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Thao Tác</th>
               </tr>
             </thead>
@@ -246,24 +429,15 @@ export default function EmployeesPage() {
                       <p className="text-gray-400 text-sm">{employee.sdt}</p>
                     </div>
                   </td>
-                  <td className="p-4">
-                    {/* <Badge className={departmentConfig[employee.idBp as keyof typeof departmentConfig].color}>
-                      {departmentConfig[employee.idBp as keyof typeof departmentConfig].label}
-                    </Badge> */}
-                  </td>
                   <td className="p-4 text-gray-400">{employee.idNq}</td>
-                  <td className="p-4">
-                    {/* <Badge className={statusConfig[employee.idBp as keyof typeof statusConfig].color}>
-                      {statusConfig[employee.idBp as keyof typeof statusConfig].label}
-                    </Badge> */}
+                  <td className="p-4 text-white">
+                      {/* @ts-ignore */}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[employee.idBp].color}`}>{statusConfig[employee.idBp as keyof typeof statusConfig].label}</span>
                   </td>
-                  <td className="p-4 text-gray-400">{String(employee.ngaySinh)}</td>
                   <td className="p-4">
                     <div className="flex gap-2">
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
-                        <Shield className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
+                      {/* Nút Sửa Nhân Viên */}
+                      <Button onClick={() => handleEditClick(employee.idNv)} size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button onClick={() => handleDeleteEmployee(employee.idNv)} size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-500" disabled={deleteMutation.isPending}>

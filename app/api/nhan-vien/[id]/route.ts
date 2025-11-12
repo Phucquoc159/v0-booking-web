@@ -47,6 +47,7 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
+    console.log(body)
 
     const updatedNhanVien = await prisma.nhanVien.update({
       where: { idNv: id },

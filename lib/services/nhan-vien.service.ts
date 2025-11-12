@@ -56,6 +56,7 @@ export async function updateNhanVien(
   data: Partial<Omit<NhanVien, 'idNv'>>
 ): Promise<ApiResponse<NhanVien>> {
   try {
+    console.log(data)
     const response = await fetch(`${API_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
