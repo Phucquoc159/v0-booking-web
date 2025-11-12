@@ -1,9 +1,10 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { getHangPhong, getListPhong, getPhong } from '@/lib/services'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { deletePhong, getHangPhong, getListPhong, getPhong, updatePhong } from '@/lib/services'
 import type { HangPhongWithRelations, PhongWithRelations } from '@/lib/types/relations'
 import { Room, RoomAmenity, RoomPromotion } from '../types/room'
+import { Phong } from '../generated/prisma'
 
 export function useRooms() {
   const { data, isLoading, isError, error } =  useQuery({
@@ -78,4 +79,18 @@ export function useRoom(id: string) {
     error,
     room: res,
   }
+}
+
+export const useUpdateRoomById = (soPhong: string, data: Partial<Omit<Phong, "soPhong">>) => {
+  return useMutation({
+    mutationKey: ["update-room"],
+    mutationFn: (id: string) => updatePhong(id),
+  })
+}
+
+export const useRemoveRoomById = () => {
+  return useMutation({
+    mutationKey: ["remove-room"],
+    mutationFn: (id: string) => deletePhong(id),
+  })
 }

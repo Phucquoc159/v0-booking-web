@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Search, Plus, Edit, Trash2, Grid3x3, List } from "lucide-react"
-import { useRooms } from "@/lib/hooks/room"
+import { useRemoveRoomById, useRooms } from "@/lib/hooks/room"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createPhong } from "@/lib/services"
 import type { Phong } from "@/lib/generated/prisma"
@@ -28,6 +28,7 @@ import { generateRoomTypeId, useCreateRoomType, useRoomTypes } from "@/lib/hooks
 import { useTrangThai } from "@/lib/hooks/trangThai"
 import { useToast } from "@/components/ui/toast"
 import { RoomTypeForm } from "@/lib/types/room"
+import { id } from "date-fns/locale"
 
 // Mock data
 const statusConfig = {
@@ -43,6 +44,7 @@ export default function RoomsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterFloor, setFilterFloor] = useState<string>("all")
   const [openDialog, setOpenDialog] = useState<boolean>(false)
+  const [roomId, setRoomId] = useState<string>("")
 
   const [typeDialogOpen, setTypeDialogOpen] = useState(false)
   const [newRoomType, setNewRoomType] = useState<RoomTypeForm>({
@@ -61,6 +63,7 @@ export default function RoomsPage() {
   const createRoomTypeMutation = useCreateRoomType()
   const createRoomClassMutation = useCreateRoomClass()
   const { rooms, isLoading, isError } = useRooms()
+  const removeRoomMutation = useRemoveRoomById()
   const queryClient = useQueryClient()
   const createRoomMutation = useMutation({
     mutationFn: createPhong,
@@ -85,6 +88,20 @@ export default function RoomsPage() {
       ...prev,
       [field]: event.target.value,
     }))
+  }
+
+  const removeRoomById = (id: string) => {
+    console.log("remove room by id")
+    removeRoomMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success("Xóa phòng thành công")
+        queryClient.invalidateQueries({ queryKey: ["rooms"] })
+      },
+      onError: (error) => {
+        toast.error("Xóa phòng thất bại")
+        console.log(error)
+      },
+    })
   }
 
 
@@ -242,9 +259,19 @@ export default function RoomsPage() {
                         <p className="text-2xl font-bold text-white">{room.soPhong}</p>
                         <p className="text-sm text-gray-400">{rt.roomTypes?.find(rt => rt.idLp === room.hangPhong.idLp)?.tenLp}</p>
                       </div>
-                      <Badge className={statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.color}>
-                        {statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.label}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className={statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.color}>
+                          {statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.label}
+                        </Badge>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-gray-400 hover:text-red-500"
+                          onClick={() => removeRoomById(room.soPhong)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="pt-3 border-t border-[#2a2a2a]">
                       <p className="text-sm text-gray-400">Giá/đêm</p>
@@ -273,7 +300,7 @@ export default function RoomsPage() {
                       <tr key={room.idHp} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
                         <td className="p-4 text-white font-semibold">{room.soPhong}</td>
                         <td className="p-4 text-gray-400">Tầng {room.tang}</td>
-                        <td className="p-4 text-gray-400">{room.hangPhong.loaiPhong.tenLp}</td>
+                        <td className="p-4 text-gray-400">{room?.hangPhong?.loaiPhong.tenLp}</td>
                         <td className="p-4">
                           <Badge className={statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.color}>
                             {statusConfig[room.trangThai.tenTrangThai.toLowerCase() as keyof typeof statusConfig]?.label}
@@ -285,7 +312,12 @@ export default function RoomsPage() {
                             <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-500">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-gray-400 hover:text-red-500"
+                              onClick={() => removeRoomById(room.soPhong)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>

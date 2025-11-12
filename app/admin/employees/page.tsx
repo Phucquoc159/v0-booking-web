@@ -432,7 +432,7 @@ export default function EmployeesPage() {
                   <td className="p-4 text-gray-400">{employee.idNq}</td>
                   <td className="p-4 text-white">
                       {/* @ts-ignore */}
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[employee.idBp].color}`}>{statusConfig[employee.idBp as keyof typeof statusConfig].label}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[employee.idBp]?.color}`}>{statusConfig[employee.idBp as keyof typeof statusConfig]?.label}</span>
                   </td>
                   <td className="p-4">
                     <div className="flex gap-2">
