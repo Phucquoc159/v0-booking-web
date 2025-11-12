@@ -74,7 +74,7 @@ export function Header() {
               </Link>
             ) : (
               <div className="flex gap-2 items-center">
-                <div onClick={router.push('/user-info')}><AvatarComponent name="User" size={25} /></div>
+                <div onClick={() => router.push('/user-info')}><AvatarComponent name="User" size={25} /></div>
                 <Button
                   variant="outline"
                   className="gap-2 bg-transparent border border-[2px] border-[#888888]"
