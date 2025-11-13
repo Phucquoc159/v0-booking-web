@@ -17,18 +17,18 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Search, Plus, Edit, Trash2, Grid3x3, List } from "lucide-react"
-import { useRemoveRoomById, useRooms } from "@/lib/hooks/room"
+import { useRemoveRoomById, useRooms, useUpdateRoom } from "@/lib/hooks/room"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createPhong } from "@/lib/services"
-import type { Phong } from "@/lib/generated/prisma"
+import type { Phong, LoaiPhong } from "@/lib/generated/prisma"
+import type { PhongWithRelations, LoaiPhongWithRelations } from "@/lib/types/relations"
 import RoomHeader from "./header/page"
 import RoomStatsPage from "./stats/page"
 import { generateRoomClassId, useCreateRoomClass, useRoomClasses } from "@/lib/hooks/roomClass"
-import { generateRoomTypeId, useCreateRoomType, useRoomTypes } from "@/lib/hooks/roomTypes"
+import { generateRoomTypeId, useCreateRoomType, useRemoveRoomTypeById, useRoomTypes, useUpdateRoomType } from "@/lib/hooks/roomTypes"
 import { useTrangThai } from "@/lib/hooks/trangThai"
 import { useToast } from "@/components/ui/toast"
 import { RoomTypeForm } from "@/lib/types/room"
-import { id } from "date-fns/locale"
 
 // Mock data
 const statusConfig = {
@@ -44,7 +44,10 @@ export default function RoomsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterFloor, setFilterFloor] = useState<string>("all")
   const [openDialog, setOpenDialog] = useState<boolean>(false)
-  const [roomId, setRoomId] = useState<string>("")
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingRoom, setEditingRoom] = useState<Pick<Phong, "soPhong" | "tang" | "idHp" | "idTt"> | null>(null)
+  const [editTypeDialogOpen, setEditTypeDialogOpen] = useState(false)
+  const [editingRoomType, setEditingRoomType] = useState<Pick<LoaiPhong, "idLp" | "tenLp" | "moTa"> | null>(null)
 
   const [typeDialogOpen, setTypeDialogOpen] = useState(false)
   const [newRoomType, setNewRoomType] = useState<RoomTypeForm>({
@@ -63,7 +66,10 @@ export default function RoomsPage() {
   const createRoomTypeMutation = useCreateRoomType()
   const createRoomClassMutation = useCreateRoomClass()
   const { rooms, isLoading, isError } = useRooms()
+  const updateRoomMutation = useUpdateRoom()
+  const updateRoomTypeMutation = useUpdateRoomType()
   const removeRoomMutation = useRemoveRoomById()
+  const removeRoomTypeMutation = useRemoveRoomTypeById()
   const queryClient = useQueryClient()
   const createRoomMutation = useMutation({
     mutationFn: createPhong,
@@ -90,8 +96,128 @@ export default function RoomsPage() {
     }))
   }
 
+  const handleEditRoomTypeFieldChange = (field: keyof Pick<LoaiPhong, "tenLp" | "moTa">) => (event: ChangeEvent<HTMLInputElement>) => {
+    if (!editingRoomType) return
+
+    const newValue = event.target.value
+    setEditingRoomType((prev) => (prev ? { ...prev, [field]: newValue } : prev))
+  }
+
+  const handleEditRoomFieldChange = (
+    field: keyof Pick<Phong, "tang" | "idHp" | "idTt">
+  ) => (value: string | ChangeEvent<HTMLInputElement>) => {
+    if (!editingRoom) return
+
+    const newValue = typeof value === "string" ? value : value.target.value
+
+    setEditingRoom((prev) =>
+      prev
+        ? {
+            ...prev,
+            [field]: field === "tang" ? Number(newValue) : newValue,
+          }
+        : prev,
+    )
+  }
+
+  const openEditRoomTypeDialog = (roomType: LoaiPhongWithRelations) => {
+    setEditingRoomType({
+      idLp: roomType.idLp,
+      tenLp: roomType.tenLp,
+      moTa: roomType.moTa ?? "",
+    })
+    setEditTypeDialogOpen(true)
+  }
+
+  const closeEditRoomTypeDialog = (open: boolean) => {
+    setEditTypeDialogOpen(open)
+    if (!open) {
+      setEditingRoomType(null)
+    }
+  }
+
+  const openEditDialog = (room: PhongWithRelations) => {
+    setEditingRoom({
+      soPhong: room.soPhong,
+      tang: room.tang,
+      idHp: room.idHp,
+      idTt: room.idTt,
+    })
+    setEditDialogOpen(true)
+  }
+
+  const closeEditDialog = (open: boolean) => {
+    setEditDialogOpen(open)
+    if (!open) {
+      setEditingRoom(null)
+    }
+  }
+
+  const updateRoom = () => {
+    if (!editingRoom) return
+
+    if (!editingRoom.soPhong || !editingRoom.tang || !editingRoom.idHp || !editingRoom.idTt) {
+      toast.error("Vui lòng điền đầy đủ thông tin phòng")
+      return
+    }
+
+    updateRoomMutation.mutate(
+      {
+        soPhong: editingRoom.soPhong,
+        data: {
+          tang: editingRoom.tang,
+          idHp: editingRoom.idHp,
+          idTt: editingRoom.idTt,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Cập nhật phòng thành công")
+          queryClient.invalidateQueries({ queryKey: ["rooms"] })
+          setEditDialogOpen(false)
+          setEditingRoom(null)
+        },
+        onError: (error) => {
+          toast.error("Cập nhật phòng thất bại")
+          console.log(error)
+        },
+      },
+    )
+  }
+
+  const updateRoomType = () => {
+    if (!editingRoomType) return
+
+    if (!editingRoomType.tenLp.trim()) {
+      toast.error("Vui lòng nhập tên loại phòng")
+      return
+    }
+
+    updateRoomTypeMutation.mutate(
+      {
+        idLp: editingRoomType.idLp,
+        data: {
+          tenLp: editingRoomType.tenLp,
+          moTa: editingRoomType.moTa ?? null,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Cập nhật loại phòng thành công")
+          queryClient.invalidateQueries({ queryKey: ["room-types"] })
+          queryClient.invalidateQueries({ queryKey: ["room-classes"] })
+          setEditTypeDialogOpen(false)
+          setEditingRoomType(null)
+        },
+        onError: (error) => {
+          toast.error("Cập nhật loại phòng thất bại")
+          console.log(error)
+        },
+      },
+    )
+  }
+
   const removeRoomById = (id: string) => {
-    console.log("remove room by id")
     removeRoomMutation.mutate(id, {
       onSuccess: () => {
         toast.success("Xóa phòng thành công")
@@ -99,6 +225,20 @@ export default function RoomsPage() {
       },
       onError: (error) => {
         toast.error("Xóa phòng thất bại")
+        console.log(error)
+      },
+    })
+  }
+
+  const removeRoomType = (id: string) => {
+    removeRoomTypeMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success("Xóa loại phòng thành công")
+        queryClient.invalidateQueries({ queryKey: ["room-types"] })
+        queryClient.invalidateQueries({ queryKey: ["room-classes"] })
+      },
+      onError: (error) => {
+        toast.error("Xóa loại phòng thất bại")
         console.log(error)
       },
     })
@@ -266,6 +406,14 @@ export default function RoomsPage() {
                         <Button
                           size="icon"
                           variant="ghost"
+                          className="h-8 w-8 text-gray-400 hover:text-white"
+                          onClick={() => openEditDialog(room)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button> 
+                        <Button
+                          size="icon"
+                          variant="ghost"
                           className="h-8 w-8 text-gray-400 hover:text-red-500"
                           onClick={() => removeRoomById(room.soPhong)}
                         >
@@ -309,7 +457,12 @@ export default function RoomsPage() {
                         <td className="p-4 text-white">{room.tang.toLocaleString()}₫</td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-gray-400 hover:text-white"
+                              onClick={() => openEditDialog(room)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
@@ -421,7 +574,7 @@ export default function RoomsPage() {
                     <th className="text-left p-4 text-gray-400 font-medium">Loại Giường</th>
                     <th className="text-left p-4 text-gray-400 font-medium">Sức Chứa</th>
                     <th className="text-left p-4 text-gray-400 font-medium">Giá/Đêm</th>
-                    <th className="text-left p-4 text-gray-400 font-medium">Số Phòng</th>
+                    <th className="text-left p-4 text-gray-400 font-medium">Mô tả</th>
                     <th className="text-left p-4 text-gray-400 font-medium">Thao Tác</th>
                   </tr>
                 </thead>
@@ -433,14 +586,25 @@ export default function RoomsPage() {
                         <td className="p-4 text-white font-semibold">{type.tenLp}</td>
                         <td className="p-4 text-gray-400">{rc.roomClasses.find(rc => rc.idLp === type.idLp)?.kieuPhong.tenKp}</td>
                         <td className="p-4 text-gray-400">{rc.roomClasses.find(rc => rc.idLp === type.idLp)?.kieuPhong.soLuongKhach} người</td>
-                        <td className="p-4 text-white">{5}₫</td> //TODO: get price from database
-                        <td className="p-4 text-gray-400">{roomCount} phòng</td>
+                        <td className="p-4 text-gray-400">Update this</td>
+                        <td className="p-4 text-white">{type.moTa}</td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-gray-400 hover:text-white"
+                              onClick={() => openEditRoomTypeDialog(type)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-500">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-gray-400 hover:text-red-500"
+                              onClick={() => removeRoomType(type.idLp)}
+                              disabled={removeRoomTypeMutation.isPending}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -454,6 +618,140 @@ export default function RoomsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      <Dialog open={editDialogOpen} onOpenChange={closeEditDialog}>
+        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Cập nhật phòng</DialogTitle>
+            <DialogDescription>Chỉnh sửa thông tin phòng và lưu thay đổi.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-so-phong" className="text-gray-300">
+                Số phòng
+              </Label>
+              <Input
+                id="edit-so-phong"
+                value={editingRoom?.soPhong ?? ""}
+                disabled
+                className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-tang" className="text-gray-300">
+                Tầng
+              </Label>
+              <Input
+                id="edit-tang"
+                type="number"
+                min={1}
+                value={editingRoom?.tang ?? ""}
+                onChange={handleEditRoomFieldChange("tang")}
+                className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">Hạng phòng</Label>
+              <Select
+                value={editingRoom?.idHp ?? ""}
+                onValueChange={(value) => handleEditRoomFieldChange("idHp")(value)}
+              >
+                <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                  <SelectValue placeholder="Chọn hạng phòng" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                  {rc.roomClasses.map((roomClass) => (
+                    <SelectItem key={roomClass.idHp} value={roomClass.idHp}>
+                      {roomClass.loaiPhong.tenLp}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">Trạng thái</Label>
+              <Select
+                value={editingRoom?.idTt ?? ""}
+                onValueChange={(value) => handleEditRoomFieldChange("idTt")(value)}
+              >
+                <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                  {tt.trangThais.map((status) => (
+                    <SelectItem key={status.idTt} value={status.idTt}>
+                      {status.tenTrangThai}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              className="border-[#2a2a2a] text-gray-300"
+              onClick={() => closeEditDialog(false)}
+            >
+              Hủy
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={updateRoom}
+              disabled={updateRoomMutation.isPending}
+            >
+              {updateRoomMutation.isPending ? "Đang lưu..." : "Lưu thay đổi"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={editTypeDialogOpen} onOpenChange={closeEditRoomTypeDialog}>
+        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Cập nhật loại phòng</DialogTitle>
+            <DialogDescription>Điều chỉnh thông tin loại phòng và lưu thay đổi.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-ten-loai" className="text-gray-300">
+                Tên loại phòng
+              </Label>
+              <Input
+                id="edit-ten-loai"
+                value={editingRoomType?.tenLp ?? ""}
+                onChange={handleEditRoomTypeFieldChange("tenLp")}
+                className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-mo-ta" className="text-gray-300">
+                Mô tả
+              </Label>
+              <Input
+                id="edit-mo-ta"
+                value={editingRoomType?.moTa ?? ""}
+                onChange={handleEditRoomTypeFieldChange("moTa")}
+                className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              className="border-[#2a2a2a] text-gray-300"
+              onClick={() => closeEditRoomTypeDialog(false)}
+            >
+              Hủy
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={updateRoomType}
+              disabled={updateRoomTypeMutation.isPending}
+            >
+              {updateRoomTypeMutation.isPending ? "Đang lưu..." : "Lưu thay đổi"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

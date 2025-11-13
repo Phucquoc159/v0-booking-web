@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { deletePhong, getHangPhong, getListPhong, getPhong, updatePhong } from '@/lib/services'
 import type { HangPhongWithRelations, PhongWithRelations } from '@/lib/types/relations'
@@ -81,10 +82,11 @@ export function useRoom(id: string) {
   }
 }
 
-export const useUpdateRoomById = (soPhong: string, data: Partial<Omit<Phong, "soPhong">>) => {
+export const useUpdateRoom = () => {
   return useMutation({
     mutationKey: ["update-room"],
-    mutationFn: (id: string) => updatePhong(id),
+    mutationFn: ({ soPhong, data }: { soPhong: string; data: Partial<Omit<Phong, "soPhong">> }) =>
+      updatePhong(soPhong, data),
   })
 }
 
@@ -93,4 +95,64 @@ export const useRemoveRoomById = () => {
     mutationKey: ["remove-room"],
     mutationFn: (id: string) => deletePhong(id),
   })
+}
+
+type StatusKey = "available" | "occupied" | "dirty" | "reserved" | "maintenance"
+
+export interface RoomStats {
+  totalRooms: number
+  countsByStatus: Record<StatusKey, number>
+  inUseCount: number
+  availableCount: number
+  availableRate: number
+  occupancyRate: number
+  floorDistribution: Array<{ floor: string; count: number }>
+}
+
+export const useRoomStats = (rooms: PhongWithRelations[] | undefined): RoomStats => {
+  return useMemo(() => {
+    const normalizedRooms = rooms ?? []
+
+    const initialStatusCounts: Record<StatusKey, number> = {
+      available: 0,
+      occupied: 0,
+      dirty: 0,
+      reserved: 0,
+      maintenance: 0,
+    }
+
+    const countsByStatus = normalizedRooms.reduce((acc, room) => {
+      const status = room.trangThai.tenTrangThai.toLowerCase() as StatusKey
+      if (status in acc) {
+        acc[status] += 1
+      }
+      return acc
+    }, initialStatusCounts)
+
+    const totalRooms = normalizedRooms.length
+    const inUseCount = countsByStatus.occupied + countsByStatus.reserved
+    const availableCount = countsByStatus.available
+    const occupancyRate = totalRooms > 0 ? (inUseCount / totalRooms) * 100 : 0
+    const availableRate = totalRooms > 0 ? (availableCount / totalRooms) * 100 : 0
+
+    const floorDistributionMap = normalizedRooms.reduce<Record<string, number>>((acc, room) => {
+      const floorKey = room.tang.toString()
+      acc[floorKey] = (acc[floorKey] ?? 0) + 1
+      return acc
+    }, {})
+
+    const floorDistribution = Object.entries(floorDistributionMap)
+      .map(([floor, count]) => ({ floor, count }))
+      .sort((a, b) => Number(a.floor) - Number(b.floor))
+
+    return {
+      totalRooms,
+      countsByStatus,
+      inUseCount,
+      availableCount,
+      availableRate,
+      occupancyRate,
+      floorDistribution,
+    }
+  }, [rooms])
 }

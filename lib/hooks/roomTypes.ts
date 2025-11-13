@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { createLoaiPhong, getListLoaiPhong } from "../services"
+import { createLoaiPhong, deleteLoaiPhong, getListLoaiPhong, updateLoaiPhong } from "../services"
 import { LoaiPhongWithRelations } from "../types/relations"
 import { LoaiPhong } from '@/lib/generated/prisma'
 
@@ -30,5 +30,20 @@ export function useCreateRoomType() {
   return useMutation({
     mutationKey: ["create-room-type"],
     mutationFn: (loaiPhong: Omit<LoaiPhong, "idPd">) => createLoaiPhong(loaiPhong),
+  })
+}
+
+export function useUpdateRoomType() {
+  return useMutation({
+    mutationKey: ["update-room-type"],
+    mutationFn: ({ idLp, data }: { idLp: string; data: Partial<Omit<LoaiPhong, "idLp">> }) =>
+      updateLoaiPhong(idLp, data),
+  })
+}
+
+export function useRemoveRoomTypeById() {
+  return useMutation({
+    mutationKey: ["remove-room-type"],
+    mutationFn: (id: string) => deleteLoaiPhong(id),
   })
 }

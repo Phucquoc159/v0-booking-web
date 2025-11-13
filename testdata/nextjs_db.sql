@@ -33,4 +33,8 @@ INSERT INTO "phong" ("SOPHONG", "TANG", "ID_HANG_PHONG", "ID_TT") VALUES
 
 INSERT INTO "trang_thai" ("ID_TT", "TEN_TRANG_THAI") VALUES
 ('TT1', 'Trống');
+('TT2', 'Đã Đặt'),
+('TT3', 'Đang Dọn'),
+('TT4', 'Đã Giữ'),
+('TT5', 'Bảo Trì'),
 
