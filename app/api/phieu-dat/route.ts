@@ -18,7 +18,16 @@ export async function GET(request: NextRequest) {
       include: {
         khachHang: true,
         nhanVien: true,
-        ctPhieuDats: true,
+        ctPhieuDats: {
+          include: {
+            hangPhong: {
+              include: {
+                loaiPhong: true,
+                kieuPhong: true,
+              }
+            }
+          }
+        },
         phieuThues: true,
       }
     })
@@ -46,7 +55,16 @@ export async function POST(request: NextRequest) {
       include: {
         khachHang: true,
         nhanVien: true,
-        ctPhieuDats: true,
+        ctPhieuDats: {
+          include: {
+            hangPhong: {
+              include: {
+                loaiPhong: true,
+                kieuPhong: true,
+              }
+            }
+          }
+        },
         phieuThues: true,
       }
     })

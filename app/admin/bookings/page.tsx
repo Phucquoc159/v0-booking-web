@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ import { Search, Plus, Eye, Edit, X } from "lucide-react"
 import { generateBookingId, useBookings, useCreateBooking, useCreateBookingDetail } from "@/lib/hooks/booking"
 import { useRoomTypes } from "@/lib/hooks/roomTypes"
 import { useRoomClasses } from "@/lib/hooks/roomClass"
+import { useGetCustomerByCCCD, useCreateCustomer } from "@/lib/hooks/customer"
 import { CTPhieuDat, PhieuDat } from "@/lib/generated/prisma"
 import { useToast } from "@/components/ui/toast"
 
@@ -44,7 +45,7 @@ export default function BookingsPage() {
     trangThai: "pending",
     //@ts-ignore
     soTienCoc: 50000,
-    cccd: "1234567890123",
+    cccd: "",
     idNv: "NV1",
   })
   const toast = useToast()
@@ -55,17 +56,98 @@ export default function BookingsPage() {
     //@ts-ignore
     donGia: 100000,
   })
+  const [khachHang, setKhachHang] = useState({
+    ho: "",
+    ten: "",
+    sdt: "",
+    email: "",
+    diaChi: "",
+    maSoThue: "",
+    matKhau: "",
+  })
 
-  const { bookings } = useBookings()
+  const { bookings, isLoading: isLoadingBookings } = useBookings()
   const { roomTypes } = useRoomTypes()
   const { roomClasses } = useRoomClasses()
 
   const createBookingMutation = useCreateBooking()
   const createBookingDetailMutation = useCreateBookingDetail()
+  const createCustomerMutation = useCreateCustomer()
+  
+  // Query customer by CCCD when CCCD is entered
+  const { data: customerData, isLoading: isLoadingCustomer } = useGetCustomerByCCCD(phieuDat.cccd)
+  
+  // Auto-fill customer info when found
+  useEffect(() => {
+    if (customerData?.success && customerData?.data) {
+      const customer = customerData.data
+      setKhachHang({
+        ho: customer.ho || "",
+        ten: customer.ten || "",
+        sdt: customer.sdt || "",
+        email: customer.email || "",
+        diaChi: customer.diaChi || "",
+        maSoThue: customer.maSoThue || "",
+        matKhau: customer.matKhau || "",
+      })
+    } else if (customerData?.success === false && phieuDat.cccd.length >= 12) {
+      // Customer not found, reset form to allow manual input
+      // Don't reset if CCCD is still being typed
+      setKhachHang({
+        ho: "",
+        ten: "",
+        sdt: "",
+        email: "",
+        diaChi: "",
+        maSoThue: "",
+        matKhau: "",
+      })
+    }
+  }, [customerData, phieuDat.cccd])
 
   const handleCreateBooking = () => {
-    const idPd = generateBookingId(bookings)
+    // Validate required fields
+    if (!phieuDat.cccd) {
+      toast.error("Vui lòng nhập CCCD hợp lệ (12 số)")
+      return
+    }
+    
+    if (!khachHang.ho || !khachHang.ten) {
+      toast.error("Vui lòng nhập đầy đủ họ và tên")
+      return
+    }
 
+    const idPd = generateBookingId(bookings)
+    const customerExists = customerData?.success && customerData?.data
+
+    // Create customer if not exists
+    if (!customerExists) {
+      createCustomerMutation.mutate({
+        cccd: phieuDat.cccd,
+        ho: khachHang.ho,
+        ten: khachHang.ten,
+        sdt: khachHang.sdt || null,
+        email: khachHang.email || null,
+        diaChi: khachHang.diaChi || null,
+        maSoThue: khachHang.maSoThue || null,
+        matKhau: khachHang.matKhau || null,
+      }, {
+        onSuccess: () => {
+          // After creating customer, create booking
+          createBooking(idPd)
+        },
+        onError: (error) => {
+          console.log(error)
+          toast.error("Tạo khách hàng thất bại")
+        }
+      })
+    } else {
+      // Customer exists, create booking directly
+      createBooking(idPd)
+    }
+  }
+
+  const createBooking = (idPd: string) => {
     createBookingMutation.mutate({
       //@ts-ignore
       idPd: idPd,
@@ -82,6 +164,16 @@ export default function BookingsPage() {
           onSuccess: () => {
             toast.success("Tạo đơn đặt phòng thành công")
             setOpenCreateDialog(false)
+            // Reset form
+            setKhachHang({
+              ho: "",
+              ten: "",
+              sdt: "",
+              email: "",
+              diaChi: "",
+              maSoThue: "",
+              matKhau: "",
+            })
           },
           onError: (error) => {
             console.log(error)
@@ -104,7 +196,42 @@ export default function BookingsPage() {
           <h1 className="text-3xl font-bold text-white mb-2">Quản Lý Đặt Phòng</h1>
           <p className="text-gray-400">Quản lý và theo dõi các đơn đặt phòng</p>
         </div>
-        <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
+        <Dialog 
+          open={openCreateDialog} 
+          onOpenChange={(open) => {
+            setOpenCreateDialog(open)
+            if (!open) {
+              // Reset form when dialog closes
+              setPhieudat({
+                ngayDat: new Date(),
+                ngayBdThue: new Date(),
+                ngayDi: new Date(),
+                trangThai: "pending",
+                //@ts-ignore
+                soTienCoc: 50000,
+                cccd: "",
+                idNv: "NV1",
+              })
+              setKhachHang({
+                ho: "",
+                ten: "",
+                sdt: "",
+                email: "",
+                diaChi: "",
+                maSoThue: "",
+                matKhau: "",
+              })
+              setCTPhieuDat({
+                idPd: "PD123",
+                idHp: "HP123",
+                soLuongPhongO: 1,
+                //@ts-ignore
+                donGia: 100000,
+              })
+              setIdHp("")
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus className="h-4 w-4 mr-2" />
@@ -122,11 +249,94 @@ export default function BookingsPage() {
               </div>
               <div className="col-span-2">
                 <Label>Cccd</Label>
+                <div className="relative">
+                  <Input
+                    className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                    placeholder="CCCD (12 số)"
+                    value={phieuDat.cccd}
+                    onChange={(e) => setPhieudat({ ...phieuDat, cccd: e.target.value })}
+                    maxLength={12}
+                  />
+                  {isLoadingCustomer && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                      Đang tìm...
+                    </span>
+                  )}
+                  {customerData?.success && customerData?.data && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-400">
+                      Đã tìm thấy
+                    </span>
+                  )}
+                  {customerData?.success === false && phieuDat.cccd.length >= 12 && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-yellow-400">
+                      Chưa có trong hệ thống
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label>Họ</Label>
                 <Input
                   className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
-                  placeholder="CCCD"
-                  value={phieuDat.cccd}
-                  onChange={(e) => setPhieudat({ ...phieuDat, cccd: e.target.value })}
+                  placeholder="Họ"
+                  value={khachHang.ho}
+                  onChange={(e) => setKhachHang({ ...khachHang, ho: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Tên</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="Tên"
+                  value={khachHang.ten}
+                  onChange={(e) => setKhachHang({ ...khachHang, ten: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Số Điện Thoại</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="Số điện thoại"
+                  value={khachHang.sdt}
+                  onChange={(e) => setKhachHang({ ...khachHang, sdt: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  type="email"
+                  placeholder="Email"
+                  value={khachHang.email}
+                  onChange={(e) => setKhachHang({ ...khachHang, email: e.target.value })}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>Địa Chỉ</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="Địa chỉ"
+                  value={khachHang.diaChi}
+                  onChange={(e) => setKhachHang({ ...khachHang, diaChi: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Mã Số Thuế</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  placeholder="Mã số thuế"
+                  value={khachHang.maSoThue}
+                  onChange={(e) => setKhachHang({ ...khachHang, maSoThue: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Mật Khẩu</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  type="password"
+                  placeholder="Mật khẩu"
+                  value={khachHang.matKhau}
+                  onChange={(e) => setKhachHang({ ...khachHang, matKhau: e.target.value })}
                 />
               </div>
               <div className="col-span-2 border-t border-[#2a2a2a] pt-4 mt-2">
@@ -174,7 +384,7 @@ export default function BookingsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {Object.entries(statusConfig).map(([status, config]) => {
-          const count = bookings?.filter((b) => b.trangThai === status).length
+          const count = bookings?.filter((b) => b.trangThai === status).length || 0
           return (
             <Card key={status} className="bg-[#1a1a1a] border-[#2a2a2a] p-4">
               <p className="text-gray-400 text-sm mb-1">{config.label}</p>
@@ -242,49 +452,82 @@ export default function BookingsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings?.filter((booking) => booking.trangThai === filterStatus).map((booking) => (
-                    <tr key={booking.idPd} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
-                      <td className="p-4 text-white font-semibold">{booking.idPd}</td>
-                      <td className="p-4">
-                        <div>
-                          <p className="text-white font-medium">{booking.khachHang?.ho}</p>
-                          <p className="text-sm text-gray-400">{booking.khachHang?.sdt}</p>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div>
-                          <p className="text-white">{5}</p> //TODO: get số phòng
-                          <p className="text-sm text-gray-400">{5 + " VIP"}</p> //TODO: get tên loại phòng
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div>
-                          <p className="text-white text-sm">{booking.ngayDat.toDateString()}</p>
-                          <p className="text-gray-400 text-sm">{booking.ngayDi.toDateString()}</p>
-                        </div>
-                      </td>
-                      <td className="p-4 text-gray-400">{Math.abs(booking.ngayDi.getTime() - booking.ngayDat.getTime()) / (1000 * 60 * 60 * 24)} đêm</td>
-                      <td className="p-4 text-white font-semibold">{booking.soTienCoc.toString()}₫</td>
-                      <td className="p-4">
-                        <Badge className={statusConfig[booking.trangThai as keyof typeof statusConfig].color}>
-                          {statusConfig[booking.trangThai as keyof typeof statusConfig].label}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex gap-2">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-500">
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {isLoadingBookings ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-gray-400">
+                        Đang tải dữ liệu...
                       </td>
                     </tr>
-                  ))}
+                  ) : bookings?.filter((booking) => filterStatus === "all" || booking.trangThai === filterStatus).length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-gray-400">
+                        Không có dữ liệu đặt phòng
+                      </td>
+                    </tr>
+                  ) : (
+                    bookings?.filter((booking) => filterStatus === "all" || booking.trangThai === filterStatus).map((booking) => {
+                      // Calculate total from booking details
+                      const totalAmount = booking.ctPhieuDats?.reduce((sum, ct) => {
+                        const nights = Math.ceil((booking.ngayDi.getTime() - booking.ngayBdThue.getTime()) / (1000 * 60 * 60 * 24))
+                        return sum + (Number(ct.donGia) * ct.soLuongPhongO * nights)
+                      }, 0) || Number(booking.soTienCoc)
+                      
+                      // Get room info from first booking detail
+                      const firstDetail = booking.ctPhieuDats?.[0]
+                      const roomTypeName = firstDetail?.hangPhong?.loaiPhong?.tenLp || "N/A"
+                      const roomCount = booking.ctPhieuDats?.reduce((sum, ct) => sum + ct.soLuongPhongO, 0) || 0
+                      
+                      // Calculate nights
+                      const nights = Math.ceil((booking.ngayDi.getTime() - booking.ngayBdThue.getTime()) / (1000 * 60 * 60 * 24))
+                      
+                      // Format customer name
+                      const customerName = booking.khachHang ? `${booking.khachHang.ho} ${booking.khachHang.ten}`.trim() : "N/A"
+                      
+                      return (
+                        <tr key={booking.idPd} className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a]">
+                          <td className="p-4 text-white font-semibold">{booking.idPd}</td>
+                          <td className="p-4">
+                            <div>
+                              <p className="text-white font-medium">{customerName}</p>
+                              <p className="text-sm text-gray-400">{booking.khachHang?.sdt || "N/A"}</p>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div>
+                              <p className="text-white">{roomCount} phòng</p>
+                              <p className="text-sm text-gray-400">{roomTypeName}</p>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div>
+                              <p className="text-white text-sm">{new Date(booking.ngayBdThue).toLocaleDateString("vi-VN")}</p>
+                              <p className="text-gray-400 text-sm">{new Date(booking.ngayDi).toLocaleDateString("vi-VN")}</p>
+                            </div>
+                          </td>
+                          <td className="p-4 text-gray-400">{nights} đêm</td>
+                          <td className="p-4 text-white font-semibold">{totalAmount.toLocaleString("vi-VN")}₫</td>
+                          <td className="p-4">
+                            <Badge className={statusConfig[booking.trangThai as keyof typeof statusConfig]?.color || statusConfig.pending.color}>
+                              {statusConfig[booking.trangThai as keyof typeof statusConfig]?.label || booking.trangThai}
+                            </Badge>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex gap-2">
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-500">
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -308,20 +551,43 @@ export default function BookingsPage() {
                 Đặt Phòng Ngày {selectedDate?.toLocaleDateString("vi-VN")}
               </h2>
               <div className="space-y-3">
-                {bookings?.slice(0, 3).map((booking) => (
-                  <div key={booking.idPd} className="p-3 bg-[#0a0a0a] rounded-lg border border-[#2a2a2a]">
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="text-white font-medium">{booking.khachHang?.ho}</p>
-                      <Badge className={statusConfig[booking.trangThai as keyof typeof statusConfig].color}>
-                        {statusConfig[booking.trangThai as keyof typeof statusConfig].label}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-400">
-                      Phòng {5} - {5 + " VIP"} //TODO: get số phòng và tên loại phòng
-                    </p>
-                    <p className="text-sm text-gray-400">{booking?.ngayBdThue?.toString()} - {booking?.ngayDi?.toString()}</p>
-                  </div>
-                ))}
+                {isLoadingBookings ? (
+                  <p className="text-gray-400 text-sm text-center py-4">Đang tải...</p>
+                ) : bookings?.filter((booking) => {
+                  if (!selectedDate) return false
+                  const bookingDate = new Date(booking.ngayBdThue)
+                  return bookingDate.toDateString() === selectedDate.toDateString()
+                }).slice(0, 5).length === 0 ? (
+                  <p className="text-gray-400 text-sm text-center py-4">Không có đặt phòng trong ngày này</p>
+                ) : (
+                  bookings?.filter((booking) => {
+                    if (!selectedDate) return false
+                    const bookingDate = new Date(booking.ngayBdThue)
+                    return bookingDate.toDateString() === selectedDate.toDateString()
+                  }).slice(0, 5).map((booking) => {
+                    const firstDetail = booking.ctPhieuDats?.[0]
+                    const roomTypeName = firstDetail?.hangPhong?.loaiPhong?.tenLp || "N/A"
+                    const roomCount = booking.ctPhieuDats?.reduce((sum, ct) => sum + ct.soLuongPhongO, 0) || 0
+                    const customerName = booking.khachHang ? `${booking.khachHang.ho} ${booking.khachHang.ten}`.trim() : "N/A"
+                    
+                    return (
+                      <div key={booking.idPd} className="p-3 bg-[#0a0a0a] rounded-lg border border-[#2a2a2a]">
+                        <div className="flex items-start justify-between mb-2">
+                          <p className="text-white font-medium">{customerName}</p>
+                          <Badge className={statusConfig[booking.trangThai as keyof typeof statusConfig]?.color || statusConfig.pending.color}>
+                            {statusConfig[booking.trangThai as keyof typeof statusConfig]?.label || booking.trangThai}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-400">
+                          {roomCount} phòng - {roomTypeName}
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          {new Date(booking.ngayBdThue).toLocaleDateString("vi-VN")} - {new Date(booking.ngayDi).toLocaleDateString("vi-VN")}
+                        </p>
+                      </div>
+                    )
+                  })
+                )}
               </div>
             </Card>
           </div>

@@ -1,33 +1,55 @@
 'use client'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createCTPhieuDat, createPhieuDat, getListPhieuDat } from '@/lib/services'
 import type { PhieuDatFull } from '@/lib/types/relations'
 import type { CTPhieuDat, PhieuDat } from '@/lib/generated/prisma'
 
 export function useBookings() {
-  const { data } =  useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["bookings"],
     queryFn: getListPhieuDat,
   })
 
+  // Transform dates from strings to Date objects
+  const bookings = (data?.data as PhieuDatFull[]) || ([] as PhieuDatFull[])
+  const transformedBookings = bookings.map((booking) => ({
+    ...booking,
+    ngayDat: booking.ngayDat ? new Date(booking.ngayDat) : new Date(),
+    ngayBdThue: booking.ngayBdThue ? new Date(booking.ngayBdThue) : new Date(),
+    ngayDi: booking.ngayDi ? new Date(booking.ngayDi) : new Date(),
+  }))
+
   return {
-    ...data,
-    bookings: data?.data as PhieuDatFull[] || [] as PhieuDatFull[],
+    bookings: transformedBookings,
+    isLoading,
+    isError,
+    error,
+    success: data?.success,
   }
 }
 
 export function useCreateBooking() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationKey: ["create-booking"],
     mutationFn: (phieuDat: Omit<PhieuDat, "idPd">) => createPhieuDat(phieuDat),
+    onSuccess: () => {
+      // Invalidate and refetch bookings after creating
+      queryClient.invalidateQueries({ queryKey: ["bookings"] })
+    },
   })
 }
 
 export function useCreateBookingDetail() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationKey: ["create-booking-detail"],
     mutationFn: (bookingDetail: Omit<CTPhieuDat, "idCtPd">) => createCTPhieuDat(bookingDetail),
+    onSuccess: () => {
+      // Invalidate and refetch bookings after creating detail
+      queryClient.invalidateQueries({ queryKey: ["bookings"] })
+    },
   })
 }
 export function generateBookingId(bookings: PhieuDatFull[] | undefined) {
