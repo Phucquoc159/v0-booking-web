@@ -17,10 +17,26 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         nhanVien: true,
-        phieuThue: true,
-        cTPhieuThues: true,
-        cTDichVus: true,
-        cTPhuThus: true,
+        phieuThue: {
+          include: {
+            khachHang: true,
+          },
+        },
+        cTPhieuThues: {
+          include: {
+            phong: true,
+          },
+        },
+        cTDichVus: {
+          include: {
+            dichVu: true,
+          },
+        },
+        cTPhuThus: {
+          include: {
+            phuThu: true,
+          },
+        },
       }
     })
 
@@ -46,10 +62,26 @@ export async function POST(request: NextRequest) {
       data: body,
       include: {
         nhanVien: true,
-        phieuThue: true,
-        cTPhieuThues: true,
-        cTDichVus: true,
-        cTPhuThus: true,
+        phieuThue: {
+          include: {
+            khachHang: true,
+          },
+        },
+        cTPhieuThues: {
+          include: {
+            phong: true,
+          },
+        },
+        cTDichVus: {
+          include: {
+            dichVu: true,
+          },
+        },
+        cTPhuThus: {
+          include: {
+            phuThu: true,
+          },
+        },
       }
     })
 

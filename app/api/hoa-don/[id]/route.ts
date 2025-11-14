@@ -15,10 +15,26 @@ export async function GET(
       where: { idHd: id },
       include: {
         nhanVien: true,
-        phieuThue: true,
-        cTPhieuThues: true,
-        cTDichVus: true,
-        cTPhuThus: true,
+        phieuThue: {
+          include: {
+            khachHang: true,
+          },
+        },
+        cTPhieuThues: {
+          include: {
+            phong: true,
+          },
+        },
+        cTDichVus: {
+          include: {
+            dichVu: true,
+          },
+        },
+        cTPhuThus: {
+          include: {
+            phuThu: true,
+          },
+        },
       }
     })
 
@@ -56,10 +72,26 @@ export async function PUT(
       data: body,
       include: {
         nhanVien: true,
-        phieuThue: true,
-        cTPhieuThues: true,
-        cTDichVus: true,
-        cTPhuThus: true,
+        phieuThue: {
+          include: {
+            khachHang: true,
+          },
+        },
+        cTPhieuThues: {
+          include: {
+            phong: true,
+          },
+        },
+        cTDichVus: {
+          include: {
+            dichVu: true,
+          },
+        },
+        cTPhuThus: {
+          include: {
+            phuThu: true,
+          },
+        },
       }
     })
 
