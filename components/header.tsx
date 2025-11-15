@@ -89,7 +89,7 @@ export function Header() {
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Đặt Phòng Ngay
             </Button>
-            {!isLoggedIn ? (
+            {isLoggedIn ? (
               <Button
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={() => router.push("/bookings")}
@@ -174,7 +174,7 @@ export function Header() {
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
                 Đặt Phòng Ngay
               </Button>
-              {!isLoggedIn ? (
+              {isLoggedIn ? (
                 <Button
                   className="bg-primary hover:bg-primary/90 text-primary-foreground w-full"
                   onClick={() => router.push("/bookings")}

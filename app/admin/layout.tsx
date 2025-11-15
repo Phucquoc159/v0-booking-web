@@ -5,7 +5,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
+import { usePathname } from "next/navigation";
 export default function AdminLayout({
   children,
 }: {
@@ -13,6 +13,7 @@ export default function AdminLayout({
 }) {
 
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   // 2. Khởi tạo trạng thái loading (để tránh hiển thị giao diện nhanh khi đang kiểm tra token)
 
@@ -33,12 +34,12 @@ export default function AdminLayout({
     }
 
     // Nếu chưa đăng nhập, bạn có thể chuyển hướng người dùng đến trang đăng nhập
-    if (!token) {
-      router.push('/admin/login'); 
-    } else {
-      router.push('/admin/dashboard');
-    }
-  }, []);
+    // if (!token) {
+    //   router.push('/admin/login'); 
+    // } else {
+    //   router.push('/admin/dashboard');
+    // }
+  }, [pathname]);
   
   return (
     <div className="flex">
