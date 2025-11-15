@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createCTPhieuDat, createPhieuDat, getListPhieuDat } from '@/lib/services'
+import { createCTPhieuDat, createPhieuDat, getListPhieuDat, updatePhieuDat } from '@/lib/services'
 import type { PhieuDatFull } from '@/lib/types/relations'
 import type { CTPhieuDat, PhieuDat } from '@/lib/generated/prisma'
 
@@ -59,4 +59,20 @@ export function generateBookingId(bookings: PhieuDatFull[] | undefined) {
   if (!lastBooking?.idPd) return 'PD1'
   const lastNumber = parseInt(lastBooking.idPd.slice(2))
   return `PD${Number.isFinite(lastNumber) ? lastNumber + 1 : 1}`
+}
+
+export function useUpdateBookingStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["update-booking-status"],
+    mutationFn: ({ idPd, trangThai }: { idPd: string; trangThai: string }) => 
+      updatePhieuDat(idPd, { trangThai }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] })
+    },
+  })
+}
+
+export function useUpdateBookingDetail() {
+  
 }

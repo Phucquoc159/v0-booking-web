@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Eye, Edit, X } from "lucide-react"
-import { generateBookingId, useBookings, useCreateBooking, useCreateBookingDetail } from "@/lib/hooks/booking"
+import { generateBookingId, useBookings, useCreateBooking, useCreateBookingDetail, useUpdateBookingStatus } from "@/lib/hooks/booking"
 import { useRoomTypes } from "@/lib/hooks/roomTypes"
 import { useRoomClasses } from "@/lib/hooks/roomClass"
 import { useGetCustomerByCCCD, useCreateCustomer } from "@/lib/hooks/customer"
@@ -73,6 +73,7 @@ export default function BookingsPage() {
   const createBookingMutation = useCreateBooking()
   const createBookingDetailMutation = useCreateBookingDetail()
   const createCustomerMutation = useCreateCustomer()
+  const updateBookingStatusMutation = useUpdateBookingStatus()
   
   // Query customer by CCCD when CCCD is entered
   const { data: customerData, isLoading: isLoadingCustomer } = useGetCustomerByCCCD(phieuDat.cccd)
@@ -186,6 +187,21 @@ export default function BookingsPage() {
         toast.error("Tạo đơn đặt phòng thất bại")
       }
     })
+  }
+
+  const handleUpdateStatus = (idPd: string, newStatus: string) => {
+    updateBookingStatusMutation.mutate(
+      { idPd, trangThai: newStatus },
+      {
+        onSuccess: () => {
+          toast.success("Cập nhật trạng thái thành công")
+        },
+        onError: (error) => {
+          console.log(error)
+          toast.error("Cập nhật trạng thái thất bại")
+        },
+      }
+    )
   }
 
   return (
@@ -512,15 +528,28 @@ export default function BookingsPage() {
                             </Badge>
                           </td>
                           <td className="p-4">
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={booking.trangThai}
+                                onValueChange={(value) => handleUpdateStatus(booking.idPd, value)}
+                                disabled={updateBookingStatusMutation.isPending}
+                              >
+                                <SelectTrigger className="w-[160px] h-8 bg-[#0a0a0a] border-[#2a2a2a] text-white text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                                  <SelectItem value="pending">Chờ Xác Nhận</SelectItem>
+                                  <SelectItem value="confirmed">Đã Xác Nhận</SelectItem>
+                                  <SelectItem value="checked-in">Đã Nhận Phòng</SelectItem>
+                                  <SelectItem value="completed">Hoàn Thành</SelectItem>
+                                  <SelectItem value="cancelled">Đã Hủy</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
                                 <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-500">
-                                <X className="h-4 w-4" />
                               </Button>
                             </div>
                           </td>
