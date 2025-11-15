@@ -33,11 +33,11 @@ export default function AdminLayout({
     }
 
     // Nếu chưa đăng nhập, bạn có thể chuyển hướng người dùng đến trang đăng nhập
-    if (!token) {
-      router.push('/admin/login'); 
-    } else {
-      router.push('/admin/dashboard');
-    }
+    // if (!token) {
+    //   router.push('/admin/login'); 
+    // } else {
+    //   router.push('/admin/dashboard');
+    // }
   }, []);
   
   return (
