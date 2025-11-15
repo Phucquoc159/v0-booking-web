@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
@@ -31,7 +32,7 @@ const menuItems = [
 export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
-
+  const router = useRouter();
   return (
     <aside
       className={`${
@@ -82,7 +83,13 @@ export function AdminSidebar() {
       <div className="p-4 border-t border-[#2a2a2a]">
         <button
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-colors w-full"
-          onClick={() => (window.location.href = "/admin/login")}
+          onClick={() => { 
+            localStorage.removeItem("adminUserData"); 
+            localStorage.removeItem("adminAuth");
+            localStorage.removeItem("adminUser");
+            localStorage.removeItem("userAuth");
+            router.push('/admin/login');
+           }}
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
           {!collapsed && <span className="text-sm font-medium">Đăng Xuất</span>}

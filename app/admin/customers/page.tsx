@@ -83,7 +83,7 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-[#1a1a1a]">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Nhận & Trả Phòng</h1>
