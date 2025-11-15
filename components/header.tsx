@@ -87,6 +87,9 @@ export function Header() {
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Đặt Phòng Ngay
             </Button>
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => router.push('/bookings')}>
+              Đặt phòng của tôi
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -162,6 +165,9 @@ export function Header() {
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
                 Đặt Phòng Ngay
               </Button>
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground w-full" onClick={() => router.push('/bookings')}>
+              Đặt phòng của tôi
+            </Button>
             </nav>
           </div>
         )}

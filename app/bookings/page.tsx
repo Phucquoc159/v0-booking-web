@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { mockBookings } from "@/lib/mock-data"
 import { Search, Filter } from "lucide-react"
-
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 export default function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState("all")
 
@@ -15,8 +16,15 @@ export default function BookingsPage() {
   return (
     <div className="min-h-screen bg-background">
 
-      <main className="md:pl-64 pt-16">
+      <main className="p-6">
         <div className="container mx-auto p-4 md:p-6 space-y-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại trang chủ
+        </Link>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Đặt phòng của tôi</h1>
             <p className="text-muted-foreground mt-1">Quản lý tất cả các đặt phòng của bạn</p>
