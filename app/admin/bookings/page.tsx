@@ -410,7 +410,7 @@ export default function BookingsPage() {
               </div>
               <div>
                 <Label>Loại Phòng</Label>
-                <Select onValueChange={(value) => setIdHp(roomClasses.find((roomClass) => roomClass.idLp === value)?.idHp || "HP01")}>
+                <Select onValueChange={(value) => setIdHp(roomClasses.find((roomClass) => roomClass.idLp === value)?.idHp || HP1)}>
                   <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
                     <SelectValue placeholder="Chọn loại phòng" />
                   </SelectTrigger>

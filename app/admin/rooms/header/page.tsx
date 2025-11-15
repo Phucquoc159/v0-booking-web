@@ -41,7 +41,7 @@ export default function RoomHeader(
             <div className="space-y-4">
               <div>
                 <Label>Số Phòng</Label>
-                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="P01" value={phong.soPhong} onChange={(e) => setPhong({ ...phong, soPhong: e.target.value })} />
+                <Input className="bg-[#0a0a0a] border-[#2a2a2a] text-white" placeholder="P1" value={phong.soPhong} onChange={(e) => setPhong({ ...phong, soPhong: e.target.value })} />
               </div>
               <div>
                 <Label>Tầng</Label>
