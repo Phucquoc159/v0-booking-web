@@ -7,11 +7,11 @@
 -- Generation Time: 2025-11-06 23:31:43.9000
 -- -------------------------------------------------------------
 INSERT INTO "trang_thai" ("ID_TT", "TEN_TRANG_THAI") VALUES
-('TT1', 'Trống');
+('TT1', 'Trống'),
 ('TT2', 'Đã Đặt'),
 ('TT3', 'Đang Dọn'),
 ('TT4', 'Đã Giữ'),
-('TT5', 'Bảo Trì'),
+('TT5', 'Bảo Trì');
 
 INSERT INTO "kieu_phong" ("ID_KP", "TEN_KP", "MO_TA", "SO_LUONG_KHACH") VALUES
 ('KP1', 'VIP 1', 'VIP', 10);
