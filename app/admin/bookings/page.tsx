@@ -18,11 +18,12 @@ import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Eye, Edit, X } from "lucide-react"
-import { generateBookingId, useBookings, useCreateBooking, useCreateBookingDetail, useUpdateBookingStatus } from "@/lib/hooks/booking"
+import { generateBookingId, useBookings, useCreateBooking, useCreateBookingDetail, useUpdateBookingStatus, useUpdateBookingDetail } from "@/lib/hooks/booking"
 import { useRoomTypes } from "@/lib/hooks/roomTypes"
 import { useRoomClasses } from "@/lib/hooks/roomClass"
 import { useGetCustomerByCCCD, useCreateCustomer } from "@/lib/hooks/customer"
 import { CTPhieuDat, PhieuDat } from "@/lib/generated/prisma"
+import type { PhieuDatFull } from "@/lib/types/relations"
 import { useToast } from "@/components/ui/toast"
 
 const statusConfig = {
@@ -65,6 +66,13 @@ export default function BookingsPage() {
     maSoThue: "",
     matKhau: "",
   })
+  const [openEditDialog, setOpenEditDialog] = useState<boolean>(false)
+  const [selectedBookingDetail, setSelectedBookingDetail] = useState<{
+    idPd: string
+    idHp: string
+    soLuongPhongO: number
+    donGia: number
+  } | null>(null)
 
   const { bookings, isLoading: isLoadingBookings } = useBookings()
   const { roomTypes } = useRoomTypes()
@@ -74,6 +82,7 @@ export default function BookingsPage() {
   const createBookingDetailMutation = useCreateBookingDetail()
   const createCustomerMutation = useCreateCustomer()
   const updateBookingStatusMutation = useUpdateBookingStatus()
+  const updateBookingDetailMutation = useUpdateBookingDetail()
   
   // Query customer by CCCD when CCCD is entered
   const { data: customerData, isLoading: isLoadingCustomer } = useGetCustomerByCCCD(phieuDat.cccd)
@@ -199,6 +208,47 @@ export default function BookingsPage() {
         onError: (error) => {
           console.log(error)
           toast.error("Cập nhật trạng thái thất bại")
+        },
+      }
+    )
+  }
+
+  const handleEditBookingDetail = (booking: PhieuDatFull) => {
+    // Get first booking detail to edit
+    const firstDetail = booking.ctPhieuDats?.[0]
+    if (firstDetail) {
+      setSelectedBookingDetail({
+        idPd: firstDetail.idPd,
+        idHp: firstDetail.idHp,
+        soLuongPhongO: firstDetail.soLuongPhongO,
+        donGia: Number(firstDetail.donGia),
+      })
+      setOpenEditDialog(true)
+    }
+  }
+
+  const handleUpdateBookingDetail = () => {
+    if (!selectedBookingDetail) return
+
+    updateBookingDetailMutation.mutate(
+      {
+        idPd: selectedBookingDetail.idPd,
+        idHp: selectedBookingDetail.idHp,
+        data: {
+          soLuongPhongO: selectedBookingDetail.soLuongPhongO,
+          //@ts-ignore
+          donGia: selectedBookingDetail.donGia,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Cập nhật chi tiết đặt phòng thành công")
+          setOpenEditDialog(false)
+          setSelectedBookingDetail(null)
+        },
+        onError: (error) => {
+          console.log(error)
+          toast.error("Cập nhật chi tiết đặt phòng thất bại")
         },
       }
     )
@@ -548,7 +598,12 @@ export default function BookingsPage() {
                               <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white">
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-8 w-8 text-gray-400 hover:text-white"
+                                onClick={() => handleEditBookingDetail(booking)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </div>
@@ -622,6 +677,95 @@ export default function BookingsPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Booking Detail Dialog */}
+      <Dialog 
+        open={openEditDialog} 
+        onOpenChange={(open) => {
+          setOpenEditDialog(open)
+          if (!open) {
+            setSelectedBookingDetail(null)
+          }
+        }}
+      >
+        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chỉnh Sửa Chi Tiết Đặt Phòng</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Cập nhật thông tin chi tiết đặt phòng
+            </DialogDescription>
+          </DialogHeader>
+          {selectedBookingDetail && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <Label>Mã Đặt Phòng</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  value={selectedBookingDetail.idPd}
+                  disabled
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>Hạng Phòng</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  value={selectedBookingDetail.idHp}
+                  disabled
+                />
+              </div>
+              <div>
+                <Label>Số Lượng Phòng Ở</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  type="number"
+                  min="1"
+                  value={selectedBookingDetail.soLuongPhongO}
+                  onChange={(e) =>
+                    setSelectedBookingDetail({
+                      ...selectedBookingDetail,
+                      soLuongPhongO: parseInt(e.target.value) || 1,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Đơn Giá</Label>
+                <Input
+                  className="bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                  type="number"
+                  min="0"
+                  value={selectedBookingDetail.donGia}
+                  onChange={(e) =>
+                    setSelectedBookingDetail({
+                      ...selectedBookingDetail,
+                      donGia: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+              <div className="col-span-2 flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  className="border-[#2a2a2a] text-white hover:bg-[#2a2a2a]"
+                  onClick={() => {
+                    setOpenEditDialog(false)
+                    setSelectedBookingDetail(null)
+                  }}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={handleUpdateBookingDetail}
+                  disabled={updateBookingDetailMutation.isPending}
+                >
+                  {updateBookingDetailMutation.isPending ? "Đang cập nhật..." : "Cập nhật"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

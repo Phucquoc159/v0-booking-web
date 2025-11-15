@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createCTPhieuDat, createPhieuDat, getListPhieuDat, updatePhieuDat } from '@/lib/services'
+import { createCTPhieuDat, createPhieuDat, getListPhieuDat, updatePhieuDat, updateCTPhieuDat } from '@/lib/services'
 import type { PhieuDatFull } from '@/lib/types/relations'
 import type { CTPhieuDat, PhieuDat } from '@/lib/generated/prisma'
 
@@ -74,5 +74,13 @@ export function useUpdateBookingStatus() {
 }
 
 export function useUpdateBookingDetail() {
-  
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["update-booking-detail"],
+    mutationFn: ({ idPd, idHp, data }: { idPd: string; idHp: string; data: Partial<Omit<CTPhieuDat, 'idPd' | 'idHp'>> }) => 
+      updateCTPhieuDat(idPd, idHp, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] })
+    },
+  })
 }

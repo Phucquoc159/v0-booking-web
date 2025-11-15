@@ -55,3 +55,24 @@ export async function createCTPhieuDat(
     }
   }
 }
+
+// Update CTPhieuDat by composite key (idPd, idHp)
+export async function updateCTPhieuDat(
+  idPd: string,
+  idHp: string,
+  data: Partial<Omit<CTPhieuDat, 'idPd' | 'idHp'>>
+): Promise<ApiResponse<CTPhieuDat>> {
+  try {
+    const response = await fetch(`${API_URL}/update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idPd, idHp, ...data }),
+    })
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
