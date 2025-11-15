@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "seed:admin": "npx tsx scripts/seed-admin.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

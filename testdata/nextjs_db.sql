@@ -20,13 +20,18 @@ INSERT INTO "loai_phong" ("ID_LP", "TEN_LP", "MO_TA") VALUES
 ('LP1', 'VIP 1', 'VIP');
 
 INSERT INTO "bo_phan" ("ID_BP", "TEN_BP") VALUES
-('BP1', 'Le tan');
+('BP1', 'Le tan'),
+('BP2', 'Quan ly'),
+('BP3', 'Admin');
 
 INSERT INTO "hang_phong" ("ID_HANG_PHONG", "ID_KP", "ID_LP") VALUES
 ('HP1', 'KP1', 'LP1');
 
 INSERT INTO "nhom_quyen" ("ID_NQ", "TEN_NC") VALUES
-('NQ1', 'NhanVien');
+('NQ1', 'NhanVien'),
+('NQ2', 'Quan ly'),
+('NQ3', 'Admin'),
+;
 
 INSERT INTO "nhan_vien" ("ID_NV", "HO", "TEN", "PHAI", "NGAY_SINH", "DIA_CHI", "SDT", "EMAIL", "HINH", "USERNAME", "PASSWORD", "ID_BP", "ID_NQ") 
 VALUES ('NV1', 'Quoka', 'Ka', 'NAM', '2025-10-27', 'Test', '0901111111', 'admin@qkhotel.com', NULL, 'admin@qkhotel.com', 'test', '1', 'NQ1');

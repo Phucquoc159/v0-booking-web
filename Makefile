@@ -52,3 +52,7 @@ migrate:
 seed:
 	@echo "Seeding database..."
 	cat testdata/nextjs_db.sql | docker compose exec -T postgres psql -U postgres -d nextjs_db
+
+seed-admin:
+	@echo "Seeding admin..."
+	docker compose exec nextjs npm run seed:admin
