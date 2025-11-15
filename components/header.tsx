@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"
-import AvatarComponent from "@/components//ui/avatar";// Đường dẫn tới file component của bạn
+import { useRouter } from "next/navigation";
+import AvatarComponent from "@/components//ui/avatar"; // Đường dẫn tới file component của bạn
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -74,7 +74,9 @@ export function Header() {
               </Link>
             ) : (
               <div className="flex gap-2 items-center">
-                <div onClick={() => router.push('/user-info')}><AvatarComponent name="User" size={25} /></div>
+                <div onClick={() => router.push("/user-info")}>
+                  <AvatarComponent name="User" size={25} />
+                </div>
                 <Button
                   variant="outline"
                   className="gap-2 bg-transparent border border-[2px] border-[#888888]"
@@ -87,9 +89,16 @@ export function Header() {
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Đặt Phòng Ngay
             </Button>
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => router.push('/bookings')}>
-              Đặt phòng của tôi
-            </Button>
+            {!isLoggedIn ? (
+              <Button
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => router.push("/bookings")}
+              >
+                Đặt phòng của tôi
+              </Button>
+            ) : (
+              <></>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -165,9 +174,16 @@ export function Header() {
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
                 Đặt Phòng Ngay
               </Button>
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground w-full" onClick={() => router.push('/bookings')}>
-              Đặt phòng của tôi
-            </Button>
+              {!isLoggedIn ? (
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground w-full"
+                  onClick={() => router.push("/bookings")}
+                >
+                  Đặt phòng của tôi
+                </Button>
+              ) : (
+                <></>
+              )}
             </nav>
           </div>
         )}
