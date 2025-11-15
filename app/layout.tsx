@@ -16,17 +16,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // const router = useRouter();
-  // const pathname = usePathname();
-  // useEffect(() => {
-  //   const isLoggedIn = localStorage.getItem("userData") !== null;
-  //   const routerNoCheck = ["/login", "/register", '/'].includes(pathname);
-  //   console.log(!isLoggedIn && !routerNoCheck);
-  //   if (!isLoggedIn && !routerNoCheck) {
-  //     localStorage.removeItem("userData");
-  //     router.push('/login');
-  //   }
-  // }, [pathname, router])
+  const router = useRouter();
+  const pathname = usePathname();
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("userData") !== null;
+    const routerNoCheck = ["/login", "/register", '/'].includes(pathname);
+    console.log(!isLoggedIn && !routerNoCheck);
+    if (!isLoggedIn && !routerNoCheck) {
+      localStorage.removeItem("userData");
+      router.push('/login');
+    }
+  }, [pathname, router])
   return (
     <html lang="vi">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
