@@ -25,6 +25,8 @@ import { useGetCustomerByCCCD, useCreateCustomer } from "@/lib/hooks/customer"
 import { CTPhieuDat, PhieuDat } from "@/lib/generated/prisma"
 import type { PhieuDatFull } from "@/lib/types/relations"
 import { useToast } from "@/components/ui/toast"
+import { useCreateInvoice, useCreatePhieuThue, useInvoices, generatePhieuThueId, generateInvoiceId } from "@/lib/hooks/invoice"
+import { getListPhieuThue } from "@/lib/services"
 
 const statusConfig = {
   pending: { label: "Chờ Xác Nhận", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
@@ -83,6 +85,9 @@ export default function BookingsPage() {
   const createCustomerMutation = useCreateCustomer()
   const updateBookingStatusMutation = useUpdateBookingStatus()
   const updateBookingDetailMutation = useUpdateBookingDetail()
+  const createInvoiceMutation = useCreateInvoice()
+  const createPhieuThueMutation = useCreatePhieuThue()
+  const { invoices } = useInvoices()
   
   // Query customer by CCCD when CCCD is entered
   const { data: customerData, isLoading: isLoadingCustomer } = useGetCustomerByCCCD(phieuDat.cccd)
@@ -198,11 +203,102 @@ export default function BookingsPage() {
     })
   }
 
+  const createInvoice = async (idPd: string) => {
+    const booking = bookings?.find((b) => b.idPd === idPd)
+    if (!booking) {
+      toast.error("Không tìm thấy đơn đặt phòng")
+      return
+    }
+
+    if (booking.trangThai !== "completed") {
+      toast.error("Chỉ có thể tạo hóa đơn cho đơn đặt phòng đã hoàn thành")
+      return
+    }
+
+    let phieuThueId: string | null = null
+    
+    if (booking.phieuThues && booking.phieuThues.length > 0) {
+      phieuThueId = booking.phieuThues[0].idPt
+    } else {
+      const phieuThueListResponse = await getListPhieuThue()
+      const phieuThueList = phieuThueListResponse.data || []
+      const newPhieuThueId = generatePhieuThueId(phieuThueList)
+
+      createPhieuThueMutation.mutate(
+        {
+          idPt: newPhieuThueId,
+          ngayLap: new Date(),
+          idNv: booking.idNv || "NV1",
+          cccd: booking.cccd,
+          idPd: booking.idPd,
+        } as any,
+        {
+          onSuccess: (data) => {
+            if (data?.success && data?.data) {
+              phieuThueId = data.data.idPt
+              createHoaDonForBooking(booking, phieuThueId)
+            } else {
+              toast.error("Tạo phiếu thuê thất bại")
+            }
+          },
+          onError: (error) => {
+            console.error(error)
+            toast.error("Tạo phiếu thuê thất bại")
+          },
+        }
+      )
+      return
+    }
+
+    if (phieuThueId) {
+      createHoaDonForBooking(booking, phieuThueId)
+    }
+  }
+
+  const createHoaDonForBooking = (booking: PhieuDatFull, phieuThueId: string) => {
+    const nights = Math.ceil(
+      (booking.ngayDi.getTime() - booking.ngayBdThue.getTime()) / (1000 * 60 * 60 * 24)
+    )
+    
+    const totalAmount = booking.ctPhieuDats?.reduce((sum, ct) => {
+      const donGia = typeof ct.donGia === 'string' ? parseFloat(ct.donGia) : Number(ct.donGia)
+      return sum + donGia * ct.soLuongPhongO * nights
+    }, 0) || Number(booking.soTienCoc)
+
+    const invoiceId = generateInvoiceId(invoices)
+
+    createInvoiceMutation.mutate(
+      {
+        idHd: invoiceId,
+        ngayLap: new Date(),
+        idNv: booking.idNv || "NV1",
+        idPt: phieuThueId,
+        //@ts-ignore
+        tongTien: totalAmount,
+        trangThai: "pending",
+        //@ts-ignore
+        soTienGiam: 0,
+      } as any,
+      {
+        onSuccess: () => {
+          toast.success("Tạo hóa đơn thành công")
+        },
+        onError: (error) => {
+          console.error(error)
+          toast.error("Tạo hóa đơn thất bại")
+        },
+      }
+    )
+  }
+
   const handleUpdateStatus = (idPd: string, newStatus: string) => {
     updateBookingStatusMutation.mutate(
       { idPd, trangThai: newStatus },
       {
         onSuccess: () => {
+          if (newStatus === "completed") {
+            createInvoice(idPd)
+          }
           toast.success("Cập nhật trạng thái thành công")
         },
         onError: (error) => {
@@ -410,7 +506,7 @@ export default function BookingsPage() {
               </div>
               <div>
                 <Label>Loại Phòng</Label>
-                <Select onValueChange={(value) => setIdHp(roomClasses.find((roomClass) => roomClass.idLp === value)?.idHp || HP1)}>
+                <Select onValueChange={(value) => setIdHp(roomClasses.find((roomClass) => roomClass.idLp === value)?.idHp || "HP1")}>
                   <SelectTrigger className="bg-[#0a0a0a] border-[#2a2a2a] text-white">
                     <SelectValue placeholder="Chọn loại phòng" />
                   </SelectTrigger>

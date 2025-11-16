@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getListHoaDon, getHoaDon, createHoaDon, updateHoaDon, deleteHoaDon } from '@/lib/services'
+import { getListHoaDon, getHoaDon, createHoaDon, updateHoaDon, deleteHoaDon, createPhieuThue, getListPhieuThue } from '@/lib/services'
 import type { HoaDon, NhanVien, PhieuThue, CTPhieuThue, CTDichVu, CTPhuThu, KhachHang, Phong, DichVu, PhuThu } from '@/lib/generated/prisma'
 
 export type HoaDonFull = HoaDon & {
@@ -111,6 +111,39 @@ export function useDeleteInvoice() {
     mutationFn: (id: string) => deleteHoaDon(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+    },
+  })
+}
+
+// Helper function to generate PhieuThue ID
+export function generatePhieuThueId(phieuThues: PhieuThue[] | undefined): string {
+  const list = phieuThues ?? []
+  if (list.length === 0) return 'PT1'
+  const lastPhieuThue = list[list.length - 1]
+  if (!lastPhieuThue?.idPt) return 'PT1'
+  const lastNumber = parseInt(lastPhieuThue.idPt.slice(2))
+  return `PT${Number.isFinite(lastNumber) ? lastNumber + 1 : 1}`
+}
+
+// Helper function to generate Invoice ID
+export function generateInvoiceId(invoices: (HoaDonFull | HoaDonTransformed)[] | undefined): string {
+  const list = invoices ?? []
+  if (list.length === 0) return 'HD1'
+  const lastInvoice = list[list.length - 1]
+  if (!lastInvoice?.idHd) return 'HD1'
+  const lastNumber = parseInt(lastInvoice.idHd.slice(2))
+  return `HD${Number.isFinite(lastNumber) ? lastNumber + 1 : 1}`
+}
+
+// Hook to create PhieuThue
+export function useCreatePhieuThue() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ['create-phieu-thue'],
+    mutationFn: (phieuThue: Omit<PhieuThue, 'idPt'>) => createPhieuThue(phieuThue),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phieu-thue'] })
+      queryClient.invalidateQueries({ queryKey: ['bookings'] })
     },
   })
 }
