@@ -25,7 +25,7 @@ import { useGetCustomerByCCCD, useCreateCustomer } from "@/lib/hooks/customer"
 import { CTPhieuDat, PhieuDat } from "@/lib/generated/prisma"
 import type { PhieuDatFull } from "@/lib/types/relations"
 import { useToast } from "@/components/ui/toast"
-import { useCreateInvoice, useCreatePhieuThue, useInvoices, generatePhieuThueId, generateInvoiceId, createCTPhieuThuesForBooking } from "@/lib/hooks/invoice"
+import { useCreateInvoice, useCreatePhieuThue, useDeleteInvoice, useInvoices, generatePhieuThueId, generateInvoiceId, createCTPhieuThuesForBooking } from "@/lib/hooks/invoice"
 import { getListPhieuThue } from "@/lib/services"
 
 const statusConfig = {
@@ -87,6 +87,7 @@ export default function BookingsPage() {
   const updateBookingDetailMutation = useUpdateBookingDetail()
   const createInvoiceMutation = useCreateInvoice()
   const createPhieuThueMutation = useCreatePhieuThue()
+  const deleteInvoiceMutation = useDeleteInvoice()
   const { invoices } = useInvoices()
   
   // Query customer by CCCD when CCCD is entered
@@ -263,6 +264,24 @@ export default function BookingsPage() {
     }
   }
 
+  const deleteInvoice = async (booking: PhieuDatFull) => {
+    const relatedInvoices = invoices.filter((invoice) => invoice.phieuThue?.idPd === booking.idPd)
+
+    if (relatedInvoices.length === 0) {
+      return
+    }
+
+    try {
+      await Promise.all(
+        relatedInvoices.map((invoice) => deleteInvoiceMutation.mutateAsync(invoice.idHd))
+      )
+      toast.success("Đã xoá hóa đơn của đơn đặt phòng này")
+    } catch (error) {
+      console.error(error)
+      toast.error("Xoá hóa đơn thất bại")
+    }
+  }
+
   const createHoaDonForBooking = async (booking: PhieuDatFull, phieuThueId: string) => {
     const nights = Math.ceil(
       (booking.ngayDi.getTime() - booking.ngayBdThue.getTime()) / (1000 * 60 * 60 * 24)
@@ -302,14 +321,26 @@ export default function BookingsPage() {
   }
 
   const handleUpdateStatus = (idPd: string, newStatus: string) => {
+    const booking = bookings?.find((b) => b.idPd === idPd)
+    if (!booking) {
+      toast.error("Không tìm thấy đơn đặt phòng")
+      return
+    }
+
+    if (newStatus === "cancelled" && booking.trangThai === "completed") {
+      toast.error("Đơn đã hoàn thành không thể chuyển sang trạng thái hủy")
+      return
+    }
+
     updateBookingStatusMutation.mutate(
       { idPd, trangThai: newStatus },
       {
         onSuccess: () => {
           if (newStatus === "completed") {
             createInvoice(idPd)
+          } else if (newStatus === "cancelled" && booking.trangThai !== "cancelled") {
+            deleteInvoice(booking as PhieuDatFull)
           }
-
           toast.success("Cập nhật trạng thái thành công")
         },
         onError: (error) => {
