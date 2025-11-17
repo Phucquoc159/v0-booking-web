@@ -25,7 +25,7 @@ import { useGetCustomerByCCCD, useCreateCustomer } from "@/lib/hooks/customer"
 import { CTPhieuDat, PhieuDat } from "@/lib/generated/prisma"
 import type { PhieuDatFull } from "@/lib/types/relations"
 import { useToast } from "@/components/ui/toast"
-import { useCreateInvoice, useCreatePhieuThue, useInvoices, generatePhieuThueId, generateInvoiceId } from "@/lib/hooks/invoice"
+import { useCreateInvoice, useCreatePhieuThue, useInvoices, generatePhieuThueId, generateInvoiceId, createCTPhieuThuesForBooking } from "@/lib/hooks/invoice"
 import { getListPhieuThue } from "@/lib/services"
 
 const statusConfig = {
@@ -204,58 +204,66 @@ export default function BookingsPage() {
   }
 
   const createInvoice = async (idPd: string) => {
-    const booking = bookings?.find((b) => b.idPd === idPd)
-    if (!booking) {
-      toast.error("Không tìm thấy đơn đặt phòng")
-      return
-    }
+    try {
+      const booking = bookings?.find((b) => b.idPd === idPd)
+      if (!booking) {
+        toast.error("Không tìm thấy đơn đặt phòng")
+        return
+      }
 
-    if (booking.trangThai !== "completed") {
-      toast.error("Chỉ có thể tạo hóa đơn cho đơn đặt phòng đã hoàn thành")
-      return
-    }
+      let phieuThueId = booking.phieuThues && booking.phieuThues.length > 0 ? booking.phieuThues[0].idPt : null
 
-    let phieuThueId: string | null = null
-    
-    if (booking.phieuThues && booking.phieuThues.length > 0) {
-      phieuThueId = booking.phieuThues[0].idPt
-    } else {
-      const phieuThueListResponse = await getListPhieuThue()
-      const phieuThueList = phieuThueListResponse.data || []
-      const newPhieuThueId = generatePhieuThueId(phieuThueList)
+      if (!phieuThueId) {
+        const phieuThueListResponse = await getListPhieuThue()
+        const phieuThueList = phieuThueListResponse.data || []
+        const newPhieuThueId = generatePhieuThueId(phieuThueList)
 
-      createPhieuThueMutation.mutate(
-        {
-          idPt: newPhieuThueId,
-          ngayLap: new Date(),
-          idNv: booking.idNv || "NV1",
-          cccd: booking.cccd,
-          idPd: booking.idPd,
-        } as any,
-        {
-          onSuccess: (data) => {
-            if (data?.success && data?.data) {
-              phieuThueId = data.data.idPt
-              createHoaDonForBooking(booking, phieuThueId)
-            } else {
-              toast.error("Tạo phiếu thuê thất bại")
-            }
-          },
-          onError: (error) => {
-            console.error(error)
+        try {
+          const response = await createPhieuThueMutation.mutateAsync(
+            {
+              idPt: newPhieuThueId,
+              ngayLap: new Date(),
+              idNv: booking.idNv || "NV1",
+              cccd: booking.cccd || "",
+              idPd: booking.idPd || "",
+            } as any
+          )
+
+          if (!response?.success) {
             toast.error("Tạo phiếu thuê thất bại")
-          },
-        }
-      )
-      return
-    }
+            return
+          }
 
-    if (phieuThueId) {
-      createHoaDonForBooking(booking, phieuThueId)
+          phieuThueId = response.data?.idPt || newPhieuThueId
+        } catch (error) {
+          console.error(error)
+          toast.error("Tạo phiếu thuê thất bại")
+          return
+        }
+
+        try {
+          await createCTPhieuThuesForBooking(booking, phieuThueId)
+          toast.success("Tạo phiếu thuê thành công")
+        } catch (error) {
+          console.error(error)
+          toast.error(error instanceof Error ? error.message : "Tạo chi tiết phiếu thuê thất bại")
+          return
+        }
+      }
+
+      if (!phieuThueId) {
+        toast.error("Không thể xác định phiếu thuê để tạo hóa đơn")
+        return
+      }
+
+      await createHoaDonForBooking(booking as PhieuDatFull, phieuThueId)
+    } catch (error) {
+      console.error(error)
+      toast.error("Đã xảy ra lỗi khi tạo hóa đơn")
     }
   }
 
-  const createHoaDonForBooking = (booking: PhieuDatFull, phieuThueId: string) => {
+  const createHoaDonForBooking = async (booking: PhieuDatFull, phieuThueId: string) => {
     const nights = Math.ceil(
       (booking.ngayDi.getTime() - booking.ngayBdThue.getTime()) / (1000 * 60 * 60 * 24)
     )
@@ -267,28 +275,30 @@ export default function BookingsPage() {
 
     const invoiceId = generateInvoiceId(invoices)
 
-    createInvoiceMutation.mutate(
-      {
-        idHd: invoiceId,
-        ngayLap: new Date(),
-        idNv: booking.idNv || "NV1",
-        idPt: phieuThueId,
-        //@ts-ignore
-        tongTien: totalAmount,
-        trangThai: "pending",
-        //@ts-ignore
-        soTienGiam: 0,
-      } as any,
-      {
-        onSuccess: () => {
-          toast.success("Tạo hóa đơn thành công")
-        },
-        onError: (error) => {
-          console.error(error)
-          toast.error("Tạo hóa đơn thất bại")
-        },
+    try {
+      const response = await createInvoiceMutation.mutateAsync(
+        {
+          idHd: invoiceId,
+          ngayLap: new Date(),
+          idNv: booking.idNv || "NV1",
+          idPt: phieuThueId,
+          //@ts-ignore
+          tongTien: totalAmount,
+          trangThai: "pending",
+          //@ts-ignore
+          soTienGiam: 0,
+        } as any
+      )
+
+      if (response?.success) {
+        toast.success("Tạo hóa đơn thành công")
+      } else {
+        toast.error("Tạo hóa đơn thất bại")
       }
-    )
+    } catch (error) {
+      console.error(error)
+      toast.error("Tạo hóa đơn thất bại")
+    }
   }
 
   const handleUpdateStatus = (idPd: string, newStatus: string) => {
@@ -299,6 +309,7 @@ export default function BookingsPage() {
           if (newStatus === "completed") {
             createInvoice(idPd)
           }
+
           toast.success("Cập nhật trạng thái thành công")
         },
         onError: (error) => {
@@ -324,6 +335,11 @@ export default function BookingsPage() {
   }
 
   const handleUpdateBookingDetail = () => {
+    if (bookings?.find((b) => b.idPd === selectedBookingDetail?.idPd)?.trangThai === statusConfig.completed.label) {
+      toast.error("Đơn đặt phòng đã được thanh toán, không thể cập nhật chi tiết")
+      return
+    }
+
     if (!selectedBookingDetail) return
 
     updateBookingDetailMutation.mutate(

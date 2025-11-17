@@ -1,8 +1,9 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getListHoaDon, getHoaDon, createHoaDon, updateHoaDon, deleteHoaDon, createPhieuThue, getListPhieuThue } from '@/lib/services'
+import { getListHoaDon, getHoaDon, createHoaDon, updateHoaDon, deleteHoaDon, createPhieuThue, getListPhieuThue, createCTPhieuThue } from '@/lib/services'
 import type { HoaDon, NhanVien, PhieuThue, CTPhieuThue, CTDichVu, CTPhuThu, KhachHang, Phong, DichVu, PhuThu } from '@/lib/generated/prisma'
+import type { PhieuDatFull } from '@/lib/types/relations'
 
 export type HoaDonFull = HoaDon & {
   nhanVien: NhanVien
@@ -146,6 +147,65 @@ export function useCreatePhieuThue() {
       queryClient.invalidateQueries({ queryKey: ['bookings'] })
     },
   })
+}
+
+export type CreateCTPhieuThuePayload = Omit<CTPhieuThue, 'idCtpt'>
+
+export function buildCTPhieuThuePayloadsFromBooking(booking: PhieuDatFull, phieuThueId: string): CreateCTPhieuThuePayload[] {
+  const bookingDetails = booking.ctPhieuDats ?? []
+  const checkIn = booking.ngayBdThue ? new Date(booking.ngayBdThue) : new Date()
+  const checkOut = booking.ngayDi ? new Date(booking.ngayDi) : new Date(checkIn.getTime() + 24 * 60 * 60 * 1000)
+  const diffTime = Math.max(checkOut.getTime() - checkIn.getTime(), 0)
+  const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+
+  const payloads: CreateCTPhieuThuePayload[] = []
+
+  bookingDetails.forEach((detail) => {
+    const rooms = detail.hangPhong?.phongs ?? []
+    if (rooms.length < detail.soLuongPhongO) {
+      throw new Error(`Không đủ phòng khả dụng cho hạng phòng ${detail.hangPhong?.idHp || ''}`)
+    }
+
+    const unitPrice = typeof detail.donGia === 'string' ? parseFloat(detail.donGia) : Number(detail.donGia)
+    const totalRoomPrice = unitPrice * nights
+
+    rooms.slice(0, detail.soLuongPhongO).forEach((room) => {
+      if (!room?.soPhong) {
+        throw new Error('Không thể xác định số phòng để tạo chi tiết phiếu thuê')
+      }
+
+      payloads.push({
+        ngayDen: checkIn,
+        gioDen: checkIn,
+        ngayDi: checkOut,
+        //@ts-ignore
+        donGia: totalRoomPrice,
+        ttThanhToan: 'pending',
+        idPt: phieuThueId,
+        soPhong: room.soPhong,
+        idHd: null,
+      })
+    })
+  })
+
+  return payloads
+}
+
+export async function createCTPhieuThuesForBooking(booking: PhieuDatFull, phieuThueId: string) {
+  const payloads = buildCTPhieuThuePayloadsFromBooking(booking, phieuThueId)
+
+  if (payloads.length === 0) {
+    throw new Error('Không tìm thấy phòng phù hợp để tạo chi tiết phiếu thuê')
+  }
+
+  const responses = await Promise.all(payloads.map((payload) => createCTPhieuThue(payload)))
+  const failedResponse = responses.find((response) => !response?.success)
+
+  if (failedResponse) {
+    throw new Error(failedResponse.message || 'Tạo chi tiết phiếu thuê thất bại')
+  }
+
+  return responses
 }
 
 // Helper function to calculate invoice totals
